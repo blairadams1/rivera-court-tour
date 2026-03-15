@@ -22,6 +22,7 @@ interface ExperienceProps {
   teleportTarget?: [number, number, number] | null;
   isSidebarOpen?: boolean;
   onNavigate?: () => void;
+  hotspotsVisible?: boolean;
 }
 
 const Experience: React.FC<ExperienceProps> = ({ 
@@ -36,7 +37,8 @@ const Experience: React.FC<ExperienceProps> = ({
   focusTarget,
   teleportTarget,
   isSidebarOpen = false,
-  onNavigate
+  onNavigate,
+  hotspotsVisible = true
 }) => {
   const floorTexture = useTexture(FLOOR_IMAGE_URL);
   const ceilingTexture = useTexture(CEILING_IMAGE_URL);
@@ -102,7 +104,7 @@ const Experience: React.FC<ExperienceProps> = ({
         </group>
       ))}
 
-      {hotspots.map((hotspot) => (
+      {hotspotsVisible && hotspots.map((hotspot) => (
         <Hotspot 
           key={hotspot.id} 
           data={hotspot} 
