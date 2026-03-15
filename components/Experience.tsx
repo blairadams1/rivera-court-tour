@@ -115,7 +115,31 @@ const Experience: React.FC<ExperienceProps> = ({
       ))}
 
       {/* Floor with provided Image and Subtle Reflection */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+      <mesh 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, -0.05, 0]}
+        onClick={(e) => {
+          if (isAdminMode && !draggingHotspotId) {
+            e.stopPropagation();
+            onWallClick([e.point.x, e.point.y, e.point.z], WallSide.FLOOR);
+          }
+        }}
+        onPointerMove={(e) => {
+          if (isAdminMode && draggingHotspotId) {
+            e.stopPropagation();
+            const hotspot = hotspots.find(h => h.id === draggingHotspotId);
+            if (hotspot && hotspot.wallSide === WallSide.FLOOR) {
+              onDragHotspot(draggingHotspotId, [e.point.x, 0, e.point.z]);
+            }
+          }
+        }}
+        onPointerUp={(e) => {
+          if (isAdminMode && draggingHotspotId) {
+            e.stopPropagation();
+            setDraggingHotspotId(null);
+          }
+        }}
+      >
         <planeGeometry args={[ROOM_WIDTH, ROOM_DEPTH]} />
         <MeshReflectorMaterial
           map={floorTexture}

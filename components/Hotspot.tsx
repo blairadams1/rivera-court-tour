@@ -21,24 +21,13 @@ const Hotspot: React.FC<HotspotProps> = ({
   onDragStart, 
   onDragEnd 
 }) => {
-  const outerRingRef = useRef<THREE.Mesh>(null);
   const innerRingRef = useRef<THREE.Mesh>(null);
   const coreRef = useRef<THREE.Mesh>(null);
   const lightRef = useRef<THREE.PointLight>(null);
   const labelRef = useRef<THREE.Group>(null);
 
   const { baseColor, rotation, offsetPosition } = useMemo(() => {
-    let color = "#005e99"; // Brand Blue
-    if (!isAdminMode) {
-      switch (data.mediaType) {
-        case 'video': color = "#ffffff"; break;
-        case 'audio': color = "#005e99"; break;
-        case 'image': color = "#ffffff"; break;
-        default: color = "#005e99";
-      }
-    } else {
-      color = isDragging ? "#ffffff" : "#005e99";
-    }
+    const color = isDragging ? "#ffffff" : "#005e99";
 
     let rot: [number, number, number] = [0, 0, 0];
     let offset: [number, number, number] = [...data.position] as [number, number, number];
@@ -49,6 +38,7 @@ const Hotspot: React.FC<HotspotProps> = ({
       case WallSide.SOUTH: rot = [0, Math.PI, 0]; offset[2] -= surfaceOffset; break;
       case WallSide.EAST:  rot = [0, -Math.PI / 2, 0]; offset[0] -= surfaceOffset; break;
       case WallSide.WEST:  rot = [0, Math.PI / 2, 0]; offset[0] += surfaceOffset; break;
+      case WallSide.FLOOR: rot = [-Math.PI / 2, 0, 0]; offset[1] = 0.05; break;
     }
 
     return { baseColor: color, rotation: rot, offsetPosition: offset };
@@ -56,18 +46,15 @@ const Hotspot: React.FC<HotspotProps> = ({
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    if (outerRingRef.current) {
-      const s = isDragging ? 1.8 : 1.4 + Math.sin(t * 2) * 0.3;
-      outerRingRef.current.scale.set(s, s, s);
-      (outerRingRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.4 : 0.2 + Math.sin(t * 2) * 0.15;
-    }
     if (innerRingRef.current) {
       const s = isDragging ? 1.4 : 1.1 + Math.cos(t * 4) * 0.15;
       innerRingRef.current.scale.set(s, s, s);
       (innerRingRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.8 : 0.6 + Math.cos(t * 4) * 0.3;
     }
     if (coreRef.current) {
-      coreRef.current.scale.setScalar(isDragging ? 1.5 : 1.2 + Math.sin(t * 6) * 0.2);
+      const s = isDragging ? 1.5 : 1.2 + Math.sin(t * 6) * 0.2;
+      coreRef.current.scale.setScalar(s);
+      (coreRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.9 : 0.3 + Math.sin(t * 2) * 0.25;
     }
     if (lightRef.current) {
       lightRef.current.intensity = isDragging ? 15 : 4 + Math.sin(t * 7) * 2.0;
@@ -81,9 +68,10 @@ const Hotspot: React.FC<HotspotProps> = ({
   return (
     <group position={offsetPosition} rotation={rotation}>
       <pointLight ref={lightRef} color={baseColor} intensity={5} distance={15} decay={2} />
-      
+
+      {/* Inner ring */}
       <mesh 
-        ref={outerRingRef} 
+        ref={innerRingRef}
         onPointerDown={(e) => {
           if (isAdminMode) {
             e.stopPropagation();
@@ -103,18 +91,14 @@ const Hotspot: React.FC<HotspotProps> = ({
         onPointerOver={() => (document.body.style.cursor = isAdminMode ? 'move' : 'pointer')}
         onPointerOut={() => (document.body.style.cursor = 'default')}
       >
-        <ringGeometry args={[0.9, 1.2, 64]} />
-        <meshBasicMaterial color={baseColor} transparent opacity={0.3} side={THREE.DoubleSide} />
-      </mesh>
-
-      <mesh ref={innerRingRef}>
         <ringGeometry args={[0.45, 0.6, 48]} />
         <meshBasicMaterial color={baseColor} transparent opacity={0.7} side={THREE.DoubleSide} />
       </mesh>
 
+      {/* Core - animated transparency */}
       <mesh ref={coreRef}>
         <circleGeometry args={[0.25, 32]} />
-        <meshBasicMaterial color={baseColor} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={baseColor} transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
 
       {isAdminMode && isDragging && (
@@ -124,18 +108,7 @@ const Hotspot: React.FC<HotspotProps> = ({
         </mesh>
       )}
 
-      {!isAdminMode && (
-        <group ref={labelRef}>
-          <mesh>
-            {/* Purely planar geometry representations for icons */}
-            {data.mediaType === 'video' && <circleGeometry args={[0.2, 3]} />} 
-            {data.mediaType === 'audio' && <circleGeometry args={[0.2, 32]} />}
-            {data.mediaType === 'image' && <ringGeometry args={[0.1, 0.25, 4]} />} 
-            {data.mediaType === 'none' && <ringGeometry args={[0.05, 0.15, 32]} />}
-            <meshBasicMaterial color={baseColor} transparent opacity={0.9} side={THREE.DoubleSide} />
-          </mesh>
-        </group>
-      )}
+
 
       <mesh 
         visible={false} 

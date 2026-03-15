@@ -11,7 +11,8 @@ export enum WallSide {
   NORTH = 'NORTH',
   SOUTH = 'SOUTH',
   EAST = 'EAST',
-  WEST = 'WEST'
+  WEST = 'WEST',
+  FLOOR = 'FLOOR'
 }
 
 export interface WallConfig {
@@ -26,6 +27,12 @@ export interface WallConfig {
 
 export type MediaType = 'image' | 'video' | 'audio' | 'none';
 
+export interface GalleryImage {
+  id: string;
+  url: string;
+  caption: string;
+}
+
 export interface Hotspot {
   id: string;
   title: string;
@@ -33,5 +40,6 @@ export interface Hotspot {
   wallSide: WallSide;
   position: [number, number, number]; // World space
   mediaType: MediaType;
-  mediaUrl?: string;
+  mediaUrl?: string; // Kept for backwards compatibility / single media
+  gallery?: GalleryImage[];
 }

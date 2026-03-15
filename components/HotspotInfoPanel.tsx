@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Hotspot } from '../types';
+import ImageGallery from './ImageGallery';
 
 interface HotspotInfoPanelProps {
   hotspot: Hotspot | null;
@@ -39,7 +40,7 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
     >
       <div 
         className={`w-full h-full landscape:w-[50vw] landscape:max-w-[50vw] md:max-w-lg md:max-h-[92vh] bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] md:rounded-2xl flex flex-col transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) will-change-transform ${
-          isVisible ? 'translate-x-0' : 'translate-x-full'
+          isVisible ? 'translate-x-0' : 'translate-x-[calc(100%+2rem)]'
         }`}
         onClick={(e) => e.stopPropagation()} // Prevent taps on the panel itself from closing it
       >
@@ -62,43 +63,41 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
               <div className={`transition-all duration-500 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              {/* Image Gallery - Top */}
+                {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
+                  <div className="mb-6 md:mb-8">
+                    <ImageGallery images={displayHotspot.gallery} />
+                  </div>
+                )}
+
                 <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight">
                   {displayHotspot.title}
                 </h2>
                 
-                {displayHotspot.mediaUrl && (
-                  <div className="mb-6 md:mb-8 rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner">
-                    {displayHotspot.mediaType === 'image' && (
-                      <img src={displayHotspot.mediaUrl} alt={displayHotspot.title} className="w-full h-auto object-cover" />
-                    )}
-                    {displayHotspot.mediaType === 'video' && (
-                      isYouTube ? (
-                        <div className="aspect-video w-full">
-                          <iframe
-                            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
-                            className="w-full h-full"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            frameBorder="0"
-                          />
-                        </div>
-                      ) : (
-                        <video src={displayHotspot.mediaUrl} controls className="w-full" />
-                      )
-                    )}
-                    {displayHotspot.mediaType === 'audio' && (
-                      <div className="p-6 md:p-8 bg-[#005e99]/5 flex items-center justify-center">
-                        <audio src={displayHotspot.mediaUrl} controls className="w-full" />
-                      </div>
-                    )}
+                {/* Description - Middle */}
+                {displayHotspot.description && (
+                  <div className="prose prose-invert max-w-none mb-6 md:mb-8">
+                    <p className="text-white/70 text-base md:text-lg leading-relaxed font-light whitespace-pre-wrap selection:bg-[#005e99] selection:text-white">
+                      {displayHotspot.description}
+                    </p>
                   </div>
                 )}
-                
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-white/70 text-base md:text-lg leading-relaxed font-light whitespace-pre-wrap selection:bg-[#005e99] selection:text-white">
-                    {displayHotspot.description}
-                  </p>
-                </div>
+
+                {/* Video Embed - Bottom */}
+                {displayHotspot.mediaUrl && isYouTube && (
+                  <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner">
+                    <div className="aspect-video w-full">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
+                        className="w-full h-full"
+                        title={`Video: ${displayHotspot.title}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        frameBorder="0"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             

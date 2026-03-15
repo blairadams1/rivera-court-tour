@@ -112,16 +112,62 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
 
     const [tx, ty, tz] = focusTarget.position;
     const VIEW_DISTANCE = 16;
+    const MIN_HEIGHT = 6; // 6 feet minimum (coordinate system is in feet)
     
     let camX = tx;
     let camZ = tz;
+    let camY = Math.max(ty, MIN_HEIGHT);
     let rotY = 0;
+    let rotX = 0;
 
     switch (focusTarget.wallSide) {
       case WallSide.NORTH: camZ = tz + VIEW_DISTANCE; rotY = 0; break;
       case WallSide.SOUTH: camZ = tz - VIEW_DISTANCE; rotY = Math.PI; break;
       case WallSide.EAST:  camX = tx - VIEW_DISTANCE; rotY = -Math.PI / 2; break;
       case WallSide.WEST:  camX = tx + VIEW_DISTANCE; rotY = Math.PI / 2; break;
+      case WallSide.FLOOR: {
+        // Move camera to 9 feet height (coordinate system is in feet)
+        camY = 9;
+        
+        const cdx = camera.position.x - tx;
+        const cdz = camera.position.z - tz;
+        
+        // Default angle if we are standing exactly on top of it
+        let angleToCamera = 0;
+        if (Math.abs(cdx) > 0.1 || Math.abs(cdz) > 0.1) {
+          angleToCamera = Math.atan2(cdz, cdx); // standard angle in XZ plane
+        }
+        
+        // Snap to nearest 45° increment to keep uniform viewing angles
+        const snappedAngle = Math.round(angleToCamera / (Math.PI / 4)) * (Math.PI / 4);
+        
+        // Use a distance of 5 units along with the 9ft height (2.74)
+        // This keeps us further back so we aren't uncomfortably close to the floor
+        const diagonalDist = 5; 
+        camX = tx + Math.cos(snappedAngle) * diagonalDist;
+        camZ = tz + Math.sin(snappedAngle) * diagonalDist;
+        
+        // Use THREE.js native LookAt for bulletproof rotation math
+        const dummyCamera = new THREE.PerspectiveCamera();
+        dummyCamera.rotation.order = 'YXZ'; // Match our controller's Euler order
+        dummyCamera.position.set(camX, camY, camZ);
+        dummyCamera.lookAt(tx, ty, tz);
+        
+        rotX = dummyCamera.rotation.x;
+        rotY = dummyCamera.rotation.y;
+        
+        if (isSidebarOpen) {
+          // Push camera to its local right so target appears on the left
+          // Scale offset proportionally since viewing dist is 6 instead of 16
+          const floorOffset = SIDEBAR_OFFSET_UNITS * (6 / 16);
+          const right = new THREE.Vector3(1, 0, 0).applyQuaternion(dummyCamera.quaternion);
+          camX += right.x * floorOffset;
+          camY += right.y * floorOffset;
+          camZ += right.z * floorOffset;
+        }
+        
+        break;
+      }
     }
 
     if (isSidebarOpen) {
@@ -133,10 +179,10 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
       }
     }
 
-    transitionTargetPos.current.set(camX, ty, camZ);
-    transitionTargetEuler.current.set(0, rotY, 0, 'YXZ');
+    transitionTargetPos.current.set(camX, camY, camZ);
+    transitionTargetEuler.current.set(rotX, rotY, 0, 'YXZ');
     isTransitioning.current = true;
-  }, [focusTarget, isSidebarOpen]);
+  }, [focusTarget, isSidebarOpen, camera]);
 
   useEffect(() => {
     if (!teleportTarget) return;
@@ -145,15 +191,16 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     isTransitioning.current = true;
   }, [teleportTarget, camera.position.y]);
 
+  const MIN_CAM_HEIGHT = 6; // 6 feet (coordinate system is in feet)
+
   useFrame((state, delta) => {
     // Clamp delta to prevent massive jumps during React lag spikes
     const dt = Math.min(delta, 0.05);
 
-    // Scaffold Height movement
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, dt * 3);
-
     if (isTransitioning.current) {
+      // During transitions, lerp ALL axes including Y toward the target
       camera.position.x = THREE.MathUtils.lerp(camera.position.x, transitionTargetPos.current.x, dt * 4);
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, transitionTargetPos.current.y, dt * 4);
       camera.position.z = THREE.MathUtils.lerp(camera.position.z, transitionTargetPos.current.z, dt * 4);
       const targetQuat = new THREE.Quaternion().setFromEuler(transitionTargetEuler.current);
       camera.quaternion.slerp(targetQuat, dt * 4);
@@ -166,6 +213,9 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
         isTransitioning.current = false;
       }
     } else {
+      // Scaffold Height movement (when not transitioning)
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, dt * 3);
+
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
       forward.y = 0;
       forward.normalize();
@@ -184,6 +234,9 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
         camera.position.add(velocity.current);
       }
     }
+
+    // Enforce minimum camera height of 6 feet at all times
+    camera.position.y = Math.max(camera.position.y, MIN_CAM_HEIGHT);
 
     const halfWidth = ROOM_WIDTH / 2 - COLLISION_BUFFER;
     const halfDepth = ROOM_DEPTH / 2 - COLLISION_BUFFER;

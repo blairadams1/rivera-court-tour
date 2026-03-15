@@ -7,7 +7,7 @@ export const ROOM_WIDTH = 66;
 export const ROOM_DEPTH = 44;
 export const ROOM_HEIGHT = 38;
 
-export const EYE_LEVEL = 5.5;
+export const EYE_LEVEL = 6.0;
 export const MAX_LIFT = 30.0;
 
 export const MOVEMENT_SPEED = 0.22;

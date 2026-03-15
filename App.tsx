@@ -9,6 +9,8 @@ import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
 import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT } from './constants';
 import { Hotspot, WallSide } from './types';
+import { db } from './firebase';
+import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const INITIAL_HOTSPOTS: Hotspot[] = [
   {
@@ -74,10 +76,7 @@ const OrientationBlocker = () => (
 const App: React.FC = () => {
   const [scaffoldHeight, setScaffoldHeight] = useState(EYE_LEVEL);
   const [showOverlay, setShowOverlay] = useState(true);
-  const [hotspots, setHotspots] = useState<Hotspot[]>(() => {
-    const saved = localStorage.getItem('dia-rivera-hotspots-v2');
-    return saved ? JSON.parse(saved) : INITIAL_HOTSPOTS;
-  });
+  const [hotspots, setHotspots] = useState<Hotspot[]>(INITIAL_HOTSPOTS);
   
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -89,12 +88,28 @@ const App: React.FC = () => {
   const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('dia-rivera-hotspots-v2', JSON.stringify(hotspots));
-  }, [hotspots]);
+    let isInitialized = false;
+    const unsubscribe = onSnapshot(collection(db, 'hotspots'), (snapshot) => {
+      if (snapshot.docs.length > 0) {
+        const fetchedHotspots = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Hotspot));
+        setHotspots(fetchedHotspots);
+        isInitialized = true;
+      } else if (!isInitialized) {
+        // Seed database if completely empty
+        INITIAL_HOTSPOTS.forEach(async (hotspot) => {
+          await setDoc(doc(db, 'hotspots', hotspot.id), hotspot);
+        });
+        isInitialized = true;
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const focusOnHotspot = useCallback((hotspot: Hotspot) => {
     setActiveHotspot(hotspot);
-    setScaffoldHeight(hotspot.position[1]);
+    // For floor hotspots, set scaffold to 9ft; for wall hotspots use the hotspot's Y
+    setScaffoldHeight(hotspot.wallSide === WallSide.FLOOR ? 9 : hotspot.position[1]);
     setFocusTarget({ position: hotspot.position, wallSide: hotspot.wallSide });
     setIsSidebarVisible(true);
     setHasNavigated(true);
@@ -124,14 +139,18 @@ const App: React.FC = () => {
     if (!activeHotspot && !isSidebarVisible) {
       focusOnHotspot(hotspots[0]);
     }
+    const willClose = isSidebarVisible;
     setIsSidebarVisible(!isSidebarVisible);
+    if (willClose) {
+      setFocusTarget(null); // Clear focus so scaffold slider re-engages
+    }
   }, [activeHotspot, isSidebarVisible, hotspots, focusOnHotspot]);
 
   const handleNavigate = useCallback(() => {
     setHasNavigated(true);
   }, []);
 
-  const handleWallClick = (position: [number, number, number], wallSide: WallSide) => {
+  const handleWallClick = async (position: [number, number, number], wallSide: WallSide) => {
     if (!isAdminMode || draggingHotspotId) return;
     let snappedPosition: [number, number, number] = [...position];
     const halfWidth = ROOM_WIDTH / 2;
@@ -141,6 +160,7 @@ const App: React.FC = () => {
       case WallSide.SOUTH: snappedPosition[2] = halfDepth; break;
       case WallSide.EAST:  snappedPosition[0] = halfWidth; break;
       case WallSide.WEST:  snappedPosition[0] = -halfWidth; break;
+      case WallSide.FLOOR: snappedPosition[1] = 0; break;
     }
     const newHotspot: Hotspot = { 
       id: `h-${Date.now()}`, 
@@ -150,19 +170,31 @@ const App: React.FC = () => {
       position: snappedPosition, 
       mediaType: 'none' 
     };
-    setHotspots(prev => [...prev, newHotspot]);
+    
+    // Create directly in Firestore so all clients see it
+    await setDoc(doc(db, 'hotspots', newHotspot.id), newHotspot);
     setEditingHotspot(newHotspot);
     setFocusTarget({ position: snappedPosition, wallSide });
   };
 
-  const handleSaveHotspot = (data: Hotspot) => {
-    setHotspots(prev => prev.map(h => h.id === data.id ? data : h));
+  const handleSaveHotspot = async (data: Hotspot) => {
+    await setDoc(doc(db, 'hotspots', data.id), data);
+    setEditingHotspot(null);
+  };
+
+  const handleDeleteHotspot = async (id: string) => {
+    await deleteDoc(doc(db, 'hotspots', id));
     setEditingHotspot(null);
   };
 
   const handleDragHotspot = useCallback((id: string, newPosition: [number, number, number]) => {
     setHotspots(prev => prev.map(h => h.id === id ? { ...h, position: newPosition } : h));
-  }, []);
+    // Save position change immediately to remote
+    const hotspotToUpdate = hotspots.find(h => h.id === id);
+    if (hotspotToUpdate) {
+      setDoc(doc(db, 'hotspots', id), { ...hotspotToUpdate, position: newPosition }, { merge: true });
+    }
+  }, [hotspots]);
 
   const handleMapClick = useCallback((x: number, z: number) => {
     setTeleportTarget([x, scaffoldHeight, z]);
@@ -268,7 +300,7 @@ const App: React.FC = () => {
       <HotspotInfoPanel 
         hotspot={activeHotspot}
         isVisible={!isAdminMode && isSidebarVisible} 
-        onClose={() => setIsSidebarVisible(false)}
+        onClose={() => { setIsSidebarVisible(false); setFocusTarget(null); }}
       />
       
       {isAdminMode && (
@@ -277,7 +309,7 @@ const App: React.FC = () => {
           editingHotspot={editingHotspot} 
           onSave={handleSaveHotspot} 
           onEdit={(h) => focusOnHotspot(h)} 
-          onDelete={(id) => { setHotspots(prev => prev.filter(h => h.id !== id)); setEditingHotspot(null); }} 
+          onDelete={handleDeleteHotspot} 
           onCancel={() => setEditingHotspot(null)} 
         />
       )}
