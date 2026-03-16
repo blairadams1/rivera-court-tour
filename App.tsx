@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const [teleportTarget, setTeleportTarget] = useState<[number, number, number] | null>(null);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [hotspotsVisible, setHotspotsVisible] = useState(true);
+  const showAdminButton = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('admin');
 
   useEffect(() => {
     let isInitialized = false;
@@ -267,21 +268,23 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="pointer-events-auto">
-          <button 
-            className={`transition-all px-6 py-2.5 rounded-full font-black border text-[10px] tracking-widest shadow-xl uppercase ${isAdminMode ? 'bg-[#005e99] text-white border-[#005e99]' : 'bg-black/40 backdrop-blur-md text-white/50 border-white/10 hover:text-white'}`} 
-            onClick={() => {
-              const nextMode = !isAdminMode;
-              setIsAdminMode(nextMode);
-              if (nextMode) {
-                setEditingHotspot(null);
-                setActiveHotspot(null);
-              }
-            }}
-          >
-            {isAdminMode ? 'ADMIN ACTIVE' : 'ADMIN ACCESS'}
-          </button>
-        </div>
+        {showAdminButton && (
+          <div className="pointer-events-auto">
+            <button 
+              className={`transition-all px-6 py-2.5 rounded-full font-black border text-[10px] tracking-widest shadow-xl uppercase ${isAdminMode ? 'bg-[#005e99] text-white border-[#005e99]' : 'bg-black/40 backdrop-blur-md text-white/50 border-white/10 hover:text-white'}`} 
+              onClick={() => {
+                const nextMode = !isAdminMode;
+                setIsAdminMode(nextMode);
+                if (nextMode) {
+                  setEditingHotspot(null);
+                  setActiveHotspot(null);
+                }
+              }}
+            >
+              {isAdminMode ? 'ADMIN ACTIVE' : 'ADMIN ACCESS'}
+            </button>
+          </div>
+        )}
       </header>
 
       <Canvas shadows camera={{ position: [0, EYE_LEVEL, 18], fov: 55 }} dpr={[1, 2]}>
