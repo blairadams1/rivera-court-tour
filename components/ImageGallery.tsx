@@ -54,16 +54,16 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
   const currentImage = images[currentIndex];
 
   const GalleryContent = ({ isFull }: { isFull: boolean }) => (
-    <div className={`relative group ${isFull ? 'w-full h-full flex flex-col items-center justify-center p-4 md:p-8' : 'w-full rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner'}`}>
+    <div className={`relative group ${isFull ? 'w-full h-full flex flex-col items-center justify-center p-4 md:p-8' : 'w-full overflow-hidden bg-black/40'}`}>
       
       {/* Image Container */}
-      <div className={`relative flex items-center justify-center overflow-hidden ${isFull ? 'h-[80vh] w-full max-w-6xl' : 'aspect-video w-full'}`}>
+      <div className={`relative flex items-center justify-center overflow-hidden ${isFull ? 'h-[80vh] w-full max-w-6xl' : 'aspect-[3/2] w-full'}`}>
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.img
             key={currentImage.id}
             src={currentImage.url}
             alt={currentImage.caption || `Image ${currentIndex + 1}`}
-            className={`object-contain shadow-2xl ${isFull ? 'max-h-full max-w-full' : 'absolute inset-0 w-full h-full object-cover'}`}
+            className={`shadow-2xl ${isFull ? 'object-contain max-h-full max-w-full' : 'object-cover absolute inset-0 w-full h-full'}`}
             custom={direction}
             variants={slideVariants}
             initial="enter"

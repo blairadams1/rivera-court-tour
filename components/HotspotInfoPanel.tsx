@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Hotspot, WallSide } from '../types';
-import { WALLS } from '../constants';
+import { Hotspot } from '../types';
 import ImageGallery from './ImageGallery';
 
 interface HotspotInfoPanelProps {
@@ -30,14 +29,6 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
   const youtubeId = displayHotspot?.mediaUrl ? getYouTubeId(displayHotspot.mediaUrl) : null;
   const isYouTube = !!youtubeId;
 
-  // Only show wall image for the 4 main wall hotspots (title starts with "North Wall", etc.)
-  const isWallOverview = displayHotspot
-    ? /^(North|South|East|West)\s+Wall\b/i.test(displayHotspot.title)
-    : false;
-  const wallImageUrl = displayHotspot && isWallOverview
-    ? WALLS.find(w => w.side === displayHotspot.wallSide)?.imageUrl
-    : null;
-
   return (
     <div 
       className={`fixed inset-0 z-[150] flex items-center justify-end md:p-6 transition-all duration-700 ease-in-out bg-transparent ${
@@ -45,71 +36,58 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
           ? 'pointer-events-auto' 
           : 'pointer-events-none'
       }`}
-      onClick={onClose} // Tapping the backdrop closes the panel
+      onClick={onClose}
     >
       <div 
-        className={`w-full h-full landscape:w-[50vw] landscape:max-w-[50vw] md:max-w-lg md:max-h-[92vh] bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] md:rounded-2xl flex flex-col transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) will-change-transform ${
+        className={`w-full h-full landscape:w-[40vw] landscape:max-w-[40vw] md:max-w-[410px] md:max-h-[92vh] bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] md:rounded-2xl flex flex-col transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) will-change-transform ${
           isVisible ? 'translate-x-0' : 'translate-x-[calc(100%+2rem)]'
         }`}
-        onClick={(e) => e.stopPropagation()} // Prevent taps on the panel itself from closing it
+        onClick={(e) => e.stopPropagation()}
       >
         {displayHotspot && (
           <>
             {/* Header */}
-            <div className="px-3 py-2 md:px-4 md:py-2.5 flex justify-between items-center border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#005e99] shadow-[0_0_8px_#005e99]"></div>
-                <span className="text-[5px] md:text-[6px] uppercase tracking-[0.4em] text-white/50 font-black">MURAL DETAIL</span>
+            <div className="px-2 py-1 md:px-2 md:py-1.5 flex justify-between items-center border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-[#005e99] shadow-[0_0_6px_#005e99]"></div>
+                <span className="text-[4px] md:text-[5px] uppercase tracking-[0.4em] text-white/50 font-black leading-none mt-px">MURAL DETAIL</span>
               </div>
               <button 
                 onClick={onClose}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
             
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-6 md:px-8 pt-1 pb-6 md:pb-8 custom-scrollbar">
-              <div className={`transition-all duration-500 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            <div className="flex-1 overflow-y-auto pt-0 pb-6 md:pb-8 custom-scrollbar">
+              <div className={`transition-all duration-500 delay-300 flex flex-col ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
               >
 
-              {/* Wall Image - only for North/South/East/West Wall hotspots */}
-                {wallImageUrl && (
-                  <div className={`mb-6 md:mb-8 rounded-lg overflow-hidden border border-white/10 shadow-lg ${
-                    displayHotspot.wallSide === WallSide.EAST || displayHotspot.wallSide === WallSide.WEST ? 'w-[80%] mx-auto' : ''
-                  }`}>
-                    <img 
-                      src={wallImageUrl} 
-                      alt={`${displayHotspot.wallSide} Wall`}
-                      className="w-full h-auto object-cover"
-                    />
-                  </div>
-                )}
-
-              {/* Image Gallery */}
+              {/* Image Gallery - Full Width */}
                 {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
-                  <div className="mb-6 md:mb-8">
+                  <div className="mb-6 md:mb-8 w-full">
                     <ImageGallery images={displayHotspot.gallery} />
                   </div>
                 )}
 
-                <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight">
+                <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-4">
                   {displayHotspot.title}
                 </h2>
                 
-                {/* Description - Middle */}
+                {/* Description */}
                 {displayHotspot.description && (
-                  <div className="prose prose-invert max-w-none mb-6 md:mb-8">
+                  <div className="prose prose-invert max-w-none mb-6 md:mb-8 px-6 md:px-8">
                     <p className="text-white/70 text-base md:text-lg leading-relaxed font-light whitespace-pre-wrap selection:bg-[#005e99] selection:text-white">
                       {displayHotspot.description}
                     </p>
                   </div>
                 )}
 
-                {/* Video Embed - Bottom */}
+                {/* Video Embed */}
                 {displayHotspot.mediaUrl && isYouTube && (
-                  <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner">
+                  <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner mx-6 md:mx-8">
                     <div className="aspect-video w-full">
                       <iframe
                         src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
