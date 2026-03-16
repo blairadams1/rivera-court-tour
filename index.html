@@ -35,16 +35,20 @@
         appearance: none;
       }
 
-      /* Hide scrollbars for cleaner UI */
+      /* Custom scrollbar - always visible */
       .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.06);
+        border-radius: 10px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #005e99;
+        background: rgba(0, 94, 153, 0.7);
         border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #005e99;
       }
     </style>
   <script type="importmap">

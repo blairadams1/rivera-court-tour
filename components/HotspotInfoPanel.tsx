@@ -60,47 +60,63 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
               </button>
             </div>
             
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto pt-0 pb-6 md:pb-8 custom-scrollbar">
-              <div className={`transition-all duration-500 delay-300 flex flex-col ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            {/* Scrollable Content with fade hint */}
+            <div className="relative flex-1 min-h-0">
+              <div 
+                className="h-full overflow-y-auto pt-0 pb-6 md:pb-8 custom-scrollbar"
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+                  const grad = el.parentElement?.querySelector('[data-fade]') as HTMLElement;
+                  if (grad) grad.style.opacity = atBottom ? '0' : '1';
+                }}
               >
+                <div className={`transition-all duration-500 delay-300 flex flex-col ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                >
 
-              {/* Image Gallery - Full Width */}
-                {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
-                  <div className="mb-6 md:mb-8 w-full">
-                    <ImageGallery images={displayHotspot.gallery} />
-                  </div>
-                )}
-
-                <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-4">
-                  {displayHotspot.title}
-                </h2>
-                
-                {/* Description */}
-                {displayHotspot.description && (
-                  <div className="prose prose-invert max-w-none mb-6 md:mb-8 px-6 md:px-8">
-                    <p className="text-white/70 text-base md:text-lg leading-relaxed font-light whitespace-pre-wrap selection:bg-[#005e99] selection:text-white">
-                      {displayHotspot.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Video Embed */}
-                {displayHotspot.mediaUrl && isYouTube && (
-                  <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner mx-6 md:mx-8">
-                    <div className="aspect-video w-full">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
-                        className="w-full h-full"
-                        title={`Video: ${displayHotspot.title}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        frameBorder="0"
-                      />
+                {/* Image Gallery - Full Width */}
+                  {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
+                    <div className="mb-6 md:mb-8 w-full">
+                      <ImageGallery images={displayHotspot.gallery} />
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-4">
+                    {displayHotspot.title}
+                  </h2>
+                  
+                  {/* Description */}
+                  {displayHotspot.description && (
+                    <div className="prose prose-invert max-w-none mb-6 md:mb-8 px-6 md:px-8">
+                      <p className="text-white/70 text-base md:text-lg leading-relaxed font-light whitespace-pre-wrap selection:bg-[#005e99] selection:text-white">
+                        {displayHotspot.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Video Embed */}
+                  {displayHotspot.mediaUrl && isYouTube && (
+                    <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner mx-6 md:mx-8">
+                      <div className="aspect-video w-full">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
+                          className="w-full h-full"
+                          title={`Video: ${displayHotspot.title}`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          frameBorder="0"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+              {/* Bottom fade gradient */}
+              <div 
+                data-fade
+                className="absolute bottom-0 left-0 right-2 h-16 pointer-events-none transition-opacity duration-300"
+                style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.95))' }}
+              />
             </div>
             
             {/* Footer */}
