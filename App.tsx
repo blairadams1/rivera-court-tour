@@ -326,11 +326,11 @@ const App: React.FC = () => {
 
       {showOverlay && (
         <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center p-8 backdrop-blur-md" onClick={() => setShowOverlay(false)}>
-          <div className="max-w-2xl text-center p-8 md:p-12 bg-transparent animate-in zoom-in-95 duration-500">
+          <div className="max-w-2xl text-center p-8 md:p-12 bg-transparent animate-in zoom-in-95 duration-500 -translate-y-[50px]">
             <img src={DIA_LOGO_URL} alt="DIA Logo" className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-8 shadow-2xl border-2 border-white/20 rounded-full object-cover" />
-            <h2 className="font-serif text-4xl md:text-6xl mb-6 md:mb-8 tracking-tight text-white leading-tight">Detroit Industry Murals</h2>
-            <p className="text-base md:text-xl text-white/60 leading-relaxed mb-10 md:mb-14 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D. Navigate with the scaffolding lift to inspect the brushwork of industry and science.</p>
-            <div className="flex flex-wrap justify-center gap-10 md:gap-14 mb-10 md:mb-14 opacity-80 font-mono text-[9px] md:text-[11px]">
+            <h2 className="font-serif text-4xl md:text-6xl mb-6 md:mb-8 tracking-tight text-white leading-tight whitespace-nowrap">Detroit Industry Murals</h2>
+            <p className="text-base md:text-xl text-white/60 leading-relaxed mb-6 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D. Navigate with the scaffolding lift to inspect the brushwork of industry and science.</p>
+            <div className="flex flex-wrap justify-center gap-10 md:gap-14 mb-7 md:mb-10 opacity-80 font-mono text-[10.5px] md:text-[13px]">
               <div className="text-center"><div className="text-[#005e99] mb-2 md:mb-3 font-black">MOVE</div><div className="text-white/40">W S A D</div></div>
               <div className="text-center"><div className="text-[#005e99] mb-2 md:mb-3 font-black">VIEW</div><div className="text-white/40">DRAG MOUSE</div></div>
               <div className="text-center"><div className="text-[#005e99] mb-2 md:mb-3 font-black">DETAIL</div><div className="text-white/40">TAP THE CIRCLES</div></div>
