@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { GalleryImage } from '../types';
-import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageGalleryProps {
   images: GalleryImage[];
@@ -26,7 +26,7 @@ const slideVariants = {
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+
   const [direction, setDirection] = useState(0);
 
   if (!images || images.length === 0) return null;
@@ -53,17 +53,17 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
 
   const currentImage = images[currentIndex];
 
-  const GalleryContent = ({ isFull }: { isFull: boolean }) => (
-    <div className={`relative group ${isFull ? 'w-full h-full flex flex-col items-center justify-center p-4 md:p-8' : 'w-full overflow-hidden bg-black/40'}`}>
+  return (
+    <div className="relative group w-full overflow-hidden bg-black/40">
       
       {/* Image Container */}
-      <div className={`relative flex items-center justify-center overflow-hidden ${isFull ? 'h-[80vh] w-full max-w-6xl' : 'aspect-[3/2] w-full'}`}>
+      <div className="relative flex items-center justify-center overflow-hidden aspect-[3/2] w-full">
         <AnimatePresence mode="popLayout" custom={direction} initial={false}>
           <motion.img
             key={currentImage.id}
             src={currentImage.url}
             alt={currentImage.caption || `Image ${currentIndex + 1}`}
-            className={`shadow-2xl ${isFull ? 'object-contain max-h-full max-w-full' : 'object-cover absolute inset-0 w-full h-full'}`}
+            className="shadow-2xl object-cover absolute inset-0 w-full h-full"
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -74,8 +74,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.3}
             onDragEnd={handleDragEnd}
-            onClick={() => !isFull && setIsFullScreen(true)}
-            style={{ cursor: isFull ? (images.length > 1 ? 'grab' : 'default') : 'zoom-in' }}
+            style={{ cursor: images.length > 1 ? 'grab' : 'default' }}
           />
         </AnimatePresence>
         
@@ -98,21 +97,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
             </button>
           </>
         )}
-        
-        {/* Full Screen Toggle (only in normal view) */}
-        {!isFull && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setIsFullScreen(true); }}
-            title="View full screen"
-            className="absolute top-2 right-2 w-8 h-8 rounded bg-black/50 text-white backdrop-blur flex items-center justify-center hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100 z-10"
-          >
-            <Maximize2 size={16} />
-          </button>
-        )}
+
       </div>
 
       {/* Caption & Indicators */}
-      <div className={`mt-4 flex flex-col items-center ${isFull ? 'w-full max-w-6xl' : 'p-4'}`}>
+      <div className="mt-4 flex flex-col items-center p-4">
         {currentImage.caption && (
           <p className="text-white/80 text-sm md:text-base text-center italic font-serif">
             {currentImage.caption}
@@ -133,34 +122,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
         )}
       </div>
     </div>
-  );
-
-  return (
-    <>
-      <GalleryContent isFull={false} />
-
-      {/* Full Screen Modal */}
-      <AnimatePresence>
-        {isFullScreen && (
-          <motion.div
-            className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex flex-col"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsFullScreen(false)}
-          >
-            <button
-              onClick={() => setIsFullScreen(false)}
-              title="Close full screen"
-              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all flex items-center justify-center z-[1001]"
-            >
-              <X size={24} />
-            </button>
-            <GalleryContent isFull={true} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
   );
 };
 
