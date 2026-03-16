@@ -52,8 +52,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772850976/WestWall2_vkkhcb.png',
-    lowResUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772850976/WestWall2_vkkhcb.png',
+    imageUrl: '/WestWall3.png',
+    lowResUrl: '/WestWall3.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],

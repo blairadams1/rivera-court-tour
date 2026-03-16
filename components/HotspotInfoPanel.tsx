@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Hotspot } from '../types';
+import { Hotspot, WallSide } from '../types';
+import { WALLS } from '../constants';
 import ImageGallery from './ImageGallery';
 
 interface HotspotInfoPanelProps {
@@ -29,6 +30,14 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
   const youtubeId = displayHotspot?.mediaUrl ? getYouTubeId(displayHotspot.mediaUrl) : null;
   const isYouTube = !!youtubeId;
 
+  // Only show wall image for the 4 main wall hotspots (title starts with "North Wall", etc.)
+  const isWallOverview = displayHotspot
+    ? /^(North|South|East|West)\s+Wall\b/i.test(displayHotspot.title)
+    : false;
+  const wallImageUrl = displayHotspot && isWallOverview
+    ? WALLS.find(w => w.side === displayHotspot.wallSide)?.imageUrl
+    : null;
+
   return (
     <div 
       className={`fixed inset-0 z-[150] flex items-center justify-end md:p-6 transition-all duration-700 ease-in-out bg-transparent ${
@@ -47,23 +56,38 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
         {displayHotspot && (
           <>
             {/* Header */}
-            <div className="p-4 md:p-6 flex justify-between items-center border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-2">
-                <div className="w-2 md:w-2.5 h-2 md:h-2.5 rounded-full bg-[#005e99] shadow-[0_0_12px_#005e99]"></div>
-                <span className="text-[9px] md:text-[10px] uppercase tracking-[0.4em] text-white/50 font-black">MURAL DETAIL</span>
+            <div className="px-3 py-2 md:px-4 md:py-2.5 flex justify-between items-center border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#005e99] shadow-[0_0_8px_#005e99]"></div>
+                <span className="text-[5px] md:text-[6px] uppercase tracking-[0.4em] text-white/50 font-black">MURAL DETAIL</span>
               </div>
               <button 
                 onClick={onClose}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
             
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-              <div className={`transition-all duration-500 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              {/* Image Gallery - Top */}
+            <div className="flex-1 overflow-y-auto px-6 md:px-8 pt-1 pb-6 md:pb-8 custom-scrollbar">
+              <div className={`transition-all duration-500 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              >
+
+              {/* Wall Image - only for North/South/East/West Wall hotspots */}
+                {wallImageUrl && (
+                  <div className={`mb-6 md:mb-8 rounded-lg overflow-hidden border border-white/10 shadow-lg ${
+                    displayHotspot.wallSide === WallSide.EAST || displayHotspot.wallSide === WallSide.WEST ? 'w-[80%] mx-auto' : ''
+                  }`}>
+                    <img 
+                      src={wallImageUrl} 
+                      alt={`${displayHotspot.wallSide} Wall`}
+                      className="w-full h-auto object-cover"
+                    />
+                  </div>
+                )}
+
+              {/* Image Gallery */}
                 {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
                   <div className="mb-6 md:mb-8">
                     <ImageGallery images={displayHotspot.gallery} />
