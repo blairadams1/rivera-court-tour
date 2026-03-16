@@ -334,7 +334,7 @@ const App: React.FC = () => {
             <h2 className="font-serif text-3xl md:text-6xl mb-4 md:mb-8 tracking-tight text-white leading-tight whitespace-nowrap">Detroit Industry Murals</h2>
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D. Navigate with the scaffolding lift to inspect the brushwork of industry and science.</p>
             <div className="flex flex-wrap justify-center gap-7 md:gap-14 mb-6 md:mb-10 opacity-80 font-mono text-[10px] md:text-[13px]">
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">MOVE</div><div className="text-white/40">W S A D</div></div>
+              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">MOVE</div><div className="text-white/40">← → ↑ ↓</div></div>
               <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">VIEW</div><div className="text-white/40">DRAG MOUSE</div></div>
               <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">DETAIL</div><div className="text-white/40">TAP THE CIRCLES</div></div>
             </div>
