@@ -76,7 +76,7 @@ const OrientationBlocker = () => (
 const App: React.FC = () => {
   const [scaffoldHeight, setScaffoldHeight] = useState(EYE_LEVEL);
   const [showOverlay, setShowOverlay] = useState(true);
-  const [hotspots, setHotspots] = useState<Hotspot[]>(INITIAL_HOTSPOTS);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
