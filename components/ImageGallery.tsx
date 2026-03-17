@@ -63,7 +63,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
             key={currentImage.id}
             src={currentImage.url}
             alt={currentImage.caption || `Image ${currentIndex + 1}`}
-            className="shadow-2xl object-cover absolute inset-0 w-full h-full"
+            className="shadow-2xl object-contain absolute inset-0 w-full h-full"
             custom={direction}
             variants={slideVariants}
             initial="enter"
