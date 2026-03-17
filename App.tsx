@@ -10,6 +10,7 @@ import Minimap from './components/Minimap';
 import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT } from './constants';
 import { Hotspot, WallSide } from './types';
 import { db } from './firebase';
+import { VERSION, BUILD_NUMBER } from './version';
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const INITIAL_HOTSPOTS: Hotspot[] = [
@@ -333,7 +334,7 @@ const App: React.FC = () => {
             <img src={DIA_LOGO_URL} alt="DIA Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-5 md:mb-8 shadow-2xl border-2 border-white/20 rounded-full object-cover flex-shrink-0" />
             <div className="flex items-baseline justify-center gap-3 mb-4 md:mb-8">
               <h2 className="font-serif text-3xl md:text-6xl tracking-tight text-white leading-tight whitespace-nowrap">Detroit Industry Murals</h2>
-              <span className="text-white text-xs font-mono tracking-widest bg-white/10 px-2 py-1 rounded-sm">v0.1</span>
+              <span className="text-white text-xs font-mono tracking-widest bg-white/10 px-2 py-1 rounded-sm">{VERSION}.{BUILD_NUMBER}</span>
             </div>
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D. Navigate with the scaffolding lift to inspect the brushwork of industry and science.</p>
             <div className="flex flex-wrap justify-center gap-7 md:gap-14 mb-6 md:mb-10 font-mono text-[12px] md:text-[15px]">
