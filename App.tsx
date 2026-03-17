@@ -339,7 +339,7 @@ const App: React.FC = () => {
               <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[14px] md:text-[17px]">DETAIL</div><div className="text-white">TAP THE CIRCLES</div></div>
             </div>
             <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => setShowOverlay(false)}>ENTER THE COURT</button>
-            <span className="mt-4 text-white/30 text-[10px] font-mono tracking-widest">v0.1</span>
+            <span className="mt-4 text-white text-xs font-mono tracking-widest">v0.1</span>
           </div>
         </div>
       )}
