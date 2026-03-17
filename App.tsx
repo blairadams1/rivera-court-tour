@@ -333,10 +333,10 @@ const App: React.FC = () => {
             <img src={DIA_LOGO_URL} alt="DIA Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-5 md:mb-8 shadow-2xl border-2 border-white/20 rounded-full object-cover flex-shrink-0" />
             <h2 className="font-serif text-3xl md:text-6xl mb-4 md:mb-8 tracking-tight text-white leading-tight whitespace-nowrap">Detroit Industry Murals</h2>
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D. Navigate with the scaffolding lift to inspect the brushwork of industry and science.</p>
-            <div className="flex flex-wrap justify-center gap-7 md:gap-14 mb-6 md:mb-10 opacity-80 font-mono text-[10px] md:text-[13px]">
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">MOVE</div><div className="text-white/40">← → ↑ ↓</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">VIEW</div><div className="text-white/40">DRAG MOUSE</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black">DETAIL</div><div className="text-white/40">TAP THE CIRCLES</div></div>
+            <div className="flex flex-wrap justify-center gap-7 md:gap-14 mb-6 md:mb-10 font-mono text-[12px] md:text-[15px]">
+              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[14px] md:text-[17px]">MOVE</div><div className="text-white">← → ↑ ↓</div></div>
+              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[14px] md:text-[17px]">VIEW</div><div className="text-white">DRAG MOUSE</div></div>
+              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[14px] md:text-[17px]">DETAIL</div><div className="text-white">TAP THE CIRCLES</div></div>
             </div>
             <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => setShowOverlay(false)}>ENTER THE COURT</button>
           </div>
