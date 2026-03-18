@@ -68,7 +68,7 @@ const Experience: React.FC<ExperienceProps> = ({
       {WALLS.map((wall, i) => (
         <group 
           key={i} 
-          onClick={(e) => {
+          onDoubleClick={(e) => {
             if (isAdminMode && !draggingHotspotId) {
               e.stopPropagation();
               onWallClick([e.point.x, e.point.y, e.point.z], wall.side);
@@ -120,7 +120,7 @@ const Experience: React.FC<ExperienceProps> = ({
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, -0.05, 0]}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           if (isAdminMode && !draggingHotspotId) {
             e.stopPropagation();
             onWallClick([e.point.x, e.point.y, e.point.z], WallSide.FLOOR);
