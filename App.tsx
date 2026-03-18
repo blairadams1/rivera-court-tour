@@ -11,7 +11,7 @@ import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT } from './constants';
 import { Hotspot, WallSide } from './types';
 import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
-import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
 const INITIAL_HOTSPOTS: Hotspot[] = [
   {
@@ -90,22 +90,27 @@ const App: React.FC = () => {
   const [hotspotsVisible, setHotspotsVisible] = useState(true);
   const showAdminButton = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('admin');
 
+  // One-time seed: only runs if the 'metadata/seeded' flag doesn't exist yet
   useEffect(() => {
-    let isInitialized = false;
-    const unsubscribe = onSnapshot(collection(db, 'hotspots'), (snapshot) => {
-      if (snapshot.docs.length > 0) {
-        const fetchedHotspots = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Hotspot));
-        setHotspots(fetchedHotspots);
-        isInitialized = true;
-      } else if (!isInitialized) {
-        // Seed database if completely empty
-        INITIAL_HOTSPOTS.forEach(async (hotspot) => {
+    const seedIfNeeded = async () => {
+      const seededRef = doc(db, 'metadata', 'seeded');
+      const seededSnap = await getDoc(seededRef);
+      if (!seededSnap.exists()) {
+        for (const hotspot of INITIAL_HOTSPOTS) {
           await setDoc(doc(db, 'hotspots', hotspot.id), hotspot);
-        });
-        isInitialized = true;
+        }
+        await setDoc(seededRef, { seededAt: new Date().toISOString() });
       }
-    });
+    };
+    seedIfNeeded();
+  }, []);
 
+  // Live-sync hotspots from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'hotspots'), (snapshot) => {
+      const fetchedHotspots = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as Hotspot));
+      setHotspots(fetchedHotspots);
+    });
     return () => unsubscribe();
   }, []);
 
