@@ -43,8 +43,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall_hd.jpeg?alt=media&token=80247600-a95f-4a94-9916-49d598d5136b',
-    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall_hd.jpeg?alt=media&token=80247600-a95f-4a94-9916-49d598d5136b',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall_4626.png?alt=media&token=e78d0662-38f4-4f71-a112-056762cb7818',
+    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall_4626.png?alt=media&token=e78d0662-38f4-4f71-a112-056762cb7818',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
