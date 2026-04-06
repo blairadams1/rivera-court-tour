@@ -52,8 +52,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: '/dezoomify-result West1 Small.png',
-    lowResUrl: '/dezoomify-result West1 Small.png',
+    imageUrl: '/dezoomify-result West2.png',
+    lowResUrl: '/dezoomify-result West2.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
