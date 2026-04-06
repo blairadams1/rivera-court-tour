@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Hotspot } from '../types';
 import ImageGallery from './ImageGallery';
 
@@ -17,6 +17,19 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
   useEffect(() => {
     if (hotspot) {
       setDisplayHotspot(hotspot);
+    }
+  }, [hotspot]);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(true);
+
+  // Reset scroll hint when a new hotspot is displayed
+  useEffect(() => {
+    if (hotspot) {
+      setShowScrollHint(true);
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+      }
     }
   }, [hotspot]);
 
@@ -63,12 +76,17 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
             {/* Scrollable Content with fade hint */}
             <div className="relative flex-1 min-h-0">
               <div 
+                ref={scrollRef}
                 className="h-full overflow-y-auto pt-0 pb-6 md:pb-8 custom-scrollbar"
                 onScroll={(e) => {
                   const el = e.currentTarget;
                   const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
                   const grad = el.parentElement?.querySelector('[data-fade]') as HTMLElement;
                   if (grad) grad.style.opacity = atBottom ? '0' : '1';
+                  // Hide scroll hint once user scrolls down at all
+                  if (el.scrollTop > 10) {
+                    setShowScrollHint(false);
+                  }
                 }}
               >
                 <div className={`transition-all duration-500 delay-300 flex flex-col ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
@@ -117,6 +135,19 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                 className="absolute bottom-0 left-0 right-2 h-16 pointer-events-none transition-opacity duration-300"
                 style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.95))' }}
               />
+              {/* Scroll down arrow indicator */}
+              {showScrollHint && (
+                <div 
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none transition-opacity duration-500 animate-bounce"
+                  style={{ opacity: showScrollHint ? 1 : 0 }}
+                >
+                  <span className="text-[9px] uppercase tracking-[0.2em] text-white/50 font-bold">Scroll</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(0,94,153,0.9)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 13l5 5 5-5"/>
+                    <path d="M7 6l5 5 5-5"/>
+                  </svg>
+                </div>
+              )}
             </div>
             
             {/* Footer */}
