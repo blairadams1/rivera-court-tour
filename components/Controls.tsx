@@ -189,7 +189,7 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     transitionTargetPos.current.set(teleportTarget[0], camera.position.y, teleportTarget[2]);
     transitionTargetEuler.current.copy(euler.current);
     isTransitioning.current = true;
-  }, [teleportTarget, camera.position.y]);
+  }, [teleportTarget]);
 
   const MIN_CAM_HEIGHT = 6; // 6 feet (coordinate system is in feet)
 

@@ -22,14 +22,19 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Reset scroll hint when a new hotspot is displayed
   useEffect(() => {
+    setShowVideo(false);
     if (hotspot) {
       setShowScrollHint(true);
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
       }
+      // Delay iframe render to avoid GPU compositing crashes during slide animation
+      const timer = setTimeout(() => setShowVideo(true), 750);
+      return () => clearTimeout(timer);
     }
   }, [hotspot]);
 
@@ -114,17 +119,23 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
 
                   {/* Video Embed */}
                   {displayHotspot.mediaUrl && isYouTube && (
-                    <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner mx-6 md:mx-8">
-                      <div className="aspect-video w-full">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
-                          className="w-full h-full"
-                          title={`Video: ${displayHotspot.title}`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          frameBorder="0"
-                        />
-                      </div>
+                    <div className="rounded-lg overflow-hidden border border-white/10 bg-black/40 shadow-inner mx-6 md:mx-8 mb-6 md:mb-8 flex items-center justify-center min-h-[200px]">
+                      {showVideo ? (
+                        <div className="aspect-video w-full">
+                          <iframe
+                            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&modestbranding=1&rel=0`}
+                            className="w-full h-full"
+                            title={`Video: ${displayHotspot.title}`}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            frameBorder="0"
+                          />
+                        </div>
+                      ) : (
+                        <div className="animate-pulse flex flex-col items-center gap-3">
+                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
