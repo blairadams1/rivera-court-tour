@@ -135,27 +135,28 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                 className="absolute bottom-0 left-0 right-2 h-16 pointer-events-none transition-opacity duration-300"
                 style={{ background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.95))' }}
               />
-              {/* Scroll down arrow indicator */}
-              {showScrollHint && (
-                <div 
-                  className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 pointer-events-none transition-opacity duration-500 animate-bounce"
-                  style={{ opacity: showScrollHint ? 1 : 0 }}
-                >
-                  <span className="text-[9px] uppercase tracking-[0.2em] text-white/50 font-bold">Scroll</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(0,94,153,0.9)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            </div>
+            
+            {/* Footer */}
+            <div className="relative p-4 md:p-6 border-t border-white/5 flex items-center justify-between shrink-0">
+              <div className="opacity-30 text-[7px] md:text-[8px] uppercase tracking-[0.3em] text-[#005e99] font-black">
+                DIA &bull; DETROIT INSTITUTE OF ARTS
+              </div>
+
+              {/* Scroll down arrow indicator inside footer */}
+              <div 
+                className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-opacity duration-500 ${showScrollHint ? 'opacity-100' : 'opacity-0'}`}
+              >
+                <div className="flex flex-col items-center animate-bounce">
+                  <span className="text-[7px] uppercase tracking-[0.2em] text-white/50 font-bold">Scroll</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
                     <path d="M7 13l5 5 5-5"/>
                     <path d="M7 6l5 5 5-5"/>
                   </svg>
                 </div>
-              )}
-            </div>
-            
-            {/* Footer */}
-            <div className="p-4 md:p-6 border-t border-white/5 flex items-center justify-between opacity-30 shrink-0">
-              <div className="text-[7px] md:text-[8px] uppercase tracking-[0.3em] text-[#005e99] font-black">
-                DIA &bull; DETROIT INSTITUTE OF ARTS
               </div>
-              <div className="text-[7px] md:text-[8px] font-mono text-white/50 uppercase">
+
+              <div className="opacity-30 text-[7px] md:text-[8px] font-mono text-white/50 uppercase">
                 {displayHotspot.wallSide} WALL
               </div>
             </div>
