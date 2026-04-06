@@ -14,8 +14,8 @@ export const MOVEMENT_SPEED = 0.22;
 export const LOOK_SENSITIVITY = 0.0018;
 export const COLLISION_BUFFER = 5.0;
 
-export const FLOOR_IMAGE_URL = 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1767290287/DIAFloor10MB_t88mvr.png';
-export const CEILING_IMAGE_URL = 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1767293200/RiveraCourtCeiling_satbij.png';
+export const FLOOR_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Ffloor.png?alt=media&token=cefeca04-973d-46a1-90b2-293f02a112aa';
+export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fceiling.png?alt=media&token=8b5b06bd-1cc3-4618-a532-e0fe5839ceef';
 
 /** 
  * Mural Wall Configuration
@@ -25,8 +25,8 @@ export const CEILING_IMAGE_URL = 'https://res.cloudinary.com/djjpgrjh4/image/upl
 export const WALLS: WallConfig[] = [
   {
     side: WallSide.NORTH,
-    imageUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772639258/NorthWall1_f3oj9w.png',
-    lowResUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772639258/NorthWall1_f3oj9w.png',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fnorth_wall.png?alt=media&token=7be05d35-8718-424e-9f29-b587c68ce2e3',
+    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fnorth_wall.png?alt=media&token=7be05d35-8718-424e-9f29-b587c68ce2e3',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2],
@@ -34,8 +34,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.SOUTH,
-    imageUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772637799/SouthWall_Clean_10mb_nkfgea_a6akih.png',
-    lowResUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772637799/SouthWall_Clean_10mb_nkfgea_a6akih.png',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fsouth_wall.png?alt=media&token=efd1944a-72ad-4aee-a6e9-17ffc1313486',
+    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fsouth_wall.png?alt=media&token=efd1944a-72ad-4aee-a6e9-17ffc1313486',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2],
@@ -43,8 +43,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772851448/EastWall2_t6izqi.png',
-    lowResUrl: 'https://res.cloudinary.com/djjpgrjh4/image/upload/v1772851448/EastWall2_t6izqi.png',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall.png?alt=media&token=d81d7173-bed1-40db-ae69-a1aa1d129372',
+    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Feast_wall.png?alt=media&token=d81d7173-bed1-40db-ae69-a1aa1d129372',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
@@ -52,8 +52,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: '/WestWall3.png',
-    lowResUrl: '/WestWall3.png',
+    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fwest_wall_hd.jpeg?alt=media&token=d53e7822-4089-4e1b-920d-0ce0b3b1a66d',
+    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fwest_wall_hd.jpeg?alt=media&token=d53e7822-4089-4e1b-920d-0ce0b3b1a66d',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
