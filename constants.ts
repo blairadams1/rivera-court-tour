@@ -12,7 +12,7 @@ export const MAX_LIFT = 30.0;
 
 export const MOVEMENT_SPEED = 0.22;
 export const LOOK_SENSITIVITY = 0.0018;
-export const COLLISION_BUFFER = 5.0;
+export const COLLISION_BUFFER = 6.0;
 
 export const FLOOR_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Ffloor.png?alt=media&token=cefeca04-973d-46a1-90b2-293f02a112aa';
 export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fceiling.png?alt=media&token=8b5b06bd-1cc3-4618-a532-e0fe5839ceef';
