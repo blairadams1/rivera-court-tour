@@ -104,9 +104,9 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
         </div>
 
         {/* Label - positioned absolutely to the left, outside the panel */}
-        <div className="absolute -left-[48px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap pointer-events-none">
-          <div className="bg-[#005e99] px-3 py-1 rounded-sm shadow-lg border border-white/10">
-            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+        <div className="absolute -left-[42px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap pointer-events-none">
+          <div className="bg-[#005e99] px-2 py-0.5 rounded-sm shadow-lg border border-white/10">
+            <span className="text-[8px] font-black uppercase tracking-[0.15em] text-white leading-none">
               Scaffold Elevation
             </span>
           </div>
