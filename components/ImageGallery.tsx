@@ -101,13 +101,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
       </div>
 
       {/* Caption */}
-      <div className="mt-2 flex flex-col items-center p-4">
-        {currentImage.caption && (
+      {currentImage.caption && (
+        <div className="px-4 py-2">
           <p className="text-white/80 text-sm md:text-base text-center italic font-serif">
             {currentImage.caption}
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
