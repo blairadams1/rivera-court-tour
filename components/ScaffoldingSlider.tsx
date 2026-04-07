@@ -48,12 +48,12 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
     <div className="fixed right-2 md:right-10 top-[38%] md:top-1/2 -translate-y-1/2 z-20 select-none touch-none">
       
       {/* Desktop: Background container holding slider + label */}
-      <div className="hidden md:flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-xl px-1.5 py-3 border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+      <div className="hidden md:block relative bg-black/30 backdrop-blur-sm rounded-lg px-2 py-3 border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
         
         {/* Interactive Slider Container - Desktop */}
         <div 
           ref={containerRef}
-          className="relative w-10 flex items-center justify-center cursor-ns-resize"
+          className="relative w-6 flex items-center justify-center cursor-ns-resize"
           style={{ height: `${SLIDER_HEIGHT_DESKTOP}px` }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -92,25 +92,23 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
           </div>
 
           {/* Tick Marks */}
-          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-10 pointer-events-none opacity-20">
+          <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-6 pointer-events-none opacity-20">
             {[0, 25, 50, 75, 100].map((tick) => (
               <div 
                 key={tick} 
-                className="absolute left-1/2 -translate-x-1/2 w-5 h-[1px] bg-white"
+                className="absolute left-1/2 -translate-x-1/2 w-4 h-[1px] bg-white"
                 style={{ bottom: `${tick}%` }}
               />
             ))}
           </div>
         </div>
 
-        {/* Label - to the right of the slider */}
-        <div className="flex flex-col items-center gap-1">
-          <div className="-rotate-90 origin-center whitespace-nowrap">
-            <div className="bg-[#005e99] px-4 py-1.5 rounded-sm shadow-lg border border-white/10">
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                Scaffold Elevation
-              </span>
-            </div>
+        {/* Label - positioned absolutely to the left, outside the panel */}
+        <div className="absolute -left-[48px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap pointer-events-none">
+          <div className="bg-[#005e99] px-3 py-1 rounded-sm shadow-lg border border-white/10">
+            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-white">
+              Scaffold Elevation
+            </span>
           </div>
         </div>
       </div>
