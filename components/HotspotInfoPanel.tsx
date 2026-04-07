@@ -23,6 +23,7 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Reset scroll hint when a new hotspot is displayed
   useEffect(() => {
@@ -57,7 +58,11 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
       onClick={onClose}
     >
       <div 
-        className={`w-full h-full landscape:w-[40vw] landscape:max-w-[40vw] md:max-w-[410px] md:max-h-[92vh] bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] md:rounded-2xl flex flex-col transition-transform duration-700 cubic-bezier(0.16, 1, 0.3, 1) will-change-transform ${
+        className={`bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col will-change-transform transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${
+          isFullscreen
+            ? 'fixed inset-0 w-full h-full max-w-none max-h-none rounded-none z-[200]'
+            : 'w-full h-full landscape:w-[40vw] landscape:max-w-[40vw] md:max-w-[410px] md:max-h-[92vh] md:rounded-2xl'
+        } ${
           isVisible ? 'translate-x-0' : 'translate-x-[calc(100%+2rem)]'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -70,12 +75,27 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                 <div className="w-1 h-1 rounded-full bg-[#005e99] shadow-[0_0_6px_#005e99]"></div>
                 <span className="text-[4px] md:text-[5px] uppercase tracking-[0.4em] text-white/50 font-black leading-none mt-px">MURAL DETAIL</span>
               </div>
-              <button 
-                onClick={onClose}
-                className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Fullscreen toggle */}
+                <button
+                  onClick={() => setIsFullscreen(f => !f)}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                  title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                >
+                  {isFullscreen ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                  )}
+                </button>
+                {/* Close */}
+                <button 
+                  onClick={onClose}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
             </div>
             
             {/* Scrollable Content with fade hint */}
@@ -94,7 +114,7 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                   }
                 }}
               >
-                <div className={`transition-all duration-500 delay-300 flex flex-col ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                <div className={`transition-all duration-500 delay-300 flex flex-col ${isFullscreen ? 'max-w-3xl mx-auto w-full' : ''} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
                 >
 
                 {/* Image Gallery - Full Width */}
