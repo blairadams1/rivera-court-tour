@@ -48,7 +48,7 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
     <div className="fixed right-2 md:right-10 top-[38%] md:top-1/2 -translate-y-1/2 z-20 select-none touch-none">
       
       {/* Desktop: Background container holding slider + label */}
-      <div className="hidden md:flex items-center gap-4 bg-black/30 backdrop-blur-sm rounded-xl px-5 py-6 border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+      <div className="hidden md:flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-xl px-1.5 py-3 border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
         
         {/* Interactive Slider Container - Desktop */}
         <div 
