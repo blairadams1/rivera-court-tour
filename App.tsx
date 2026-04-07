@@ -251,7 +251,7 @@ const App: React.FC = () => {
             </button>
           </div>
           
-          <div className="pointer-events-auto">
+          <div className="pointer-events-auto hidden md:block">
             <Minimap 
               hotspots={hotspots}
               activeHotspot={activeHotspot}
