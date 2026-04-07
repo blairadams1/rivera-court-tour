@@ -66,7 +66,7 @@ const Hotspot: React.FC<HotspotProps> = ({
   });
 
   return (
-    <group position={offsetPosition} rotation={rotation} scale={[1.5, 1.5, 1]}>
+    <group position={offsetPosition} rotation={rotation} scale={[1.875, 1.875, 1]}>
       <pointLight ref={lightRef} color={baseColor} intensity={5} distance={15} decay={2} />
 
       {/* Inner ring */}
@@ -98,7 +98,7 @@ const Hotspot: React.FC<HotspotProps> = ({
       {/* Core - animated transparency */}
       <mesh ref={coreRef}>
         <circleGeometry args={[0.25, 32]} />
-        <meshBasicMaterial color={baseColor} transparent opacity={0.3} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.6} side={THREE.DoubleSide} />
       </mesh>
 
       {isAdminMode && isDragging && (
