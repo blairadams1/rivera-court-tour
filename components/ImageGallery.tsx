@@ -100,25 +100,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
 
       </div>
 
-      {/* Caption & Indicators */}
-      <div className="mt-4 flex flex-col items-center p-4">
+      {/* Caption */}
+      <div className="mt-2 flex flex-col items-center p-4">
         {currentImage.caption && (
           <p className="text-white/80 text-sm md:text-base text-center italic font-serif">
             {currentImage.caption}
           </p>
-        )}
-        
-        {images.length > 1 && (
-          <div className="flex gap-2 mt-4 justify-center">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                title={`Go to image ${idx + 1}`}
-                onClick={(e) => { e.stopPropagation(); setDirection(idx > currentIndex ? 1 : -1); setCurrentIndex(idx); }}
-                className={`h-1.5 rounded-full transition-all ${idx === currentIndex ? 'w-6 bg-[#005e99]' : 'w-1.5 bg-white/20'}`}
-              />
-            ))}
-          </div>
         )}
       </div>
     </div>
