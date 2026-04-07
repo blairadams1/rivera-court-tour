@@ -344,10 +344,47 @@ const App: React.FC = () => {
               <span className="text-white text-xs font-mono tracking-widest bg-white/10 px-2 py-1 rounded-sm">{VERSION}.{BUILD_NUMBER}</span>
             </div>
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D.</p>
-            <div className="flex flex-wrap justify-center gap-7 md:gap-14 mb-6 md:mb-10 font-mono text-[16px] md:text-[19px]">
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[18px] md:text-[21px]">MOVE</div><div className="text-white">← → ↑ ↓</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[18px] md:text-[21px]">VIEW</div><div className="text-white">DRAG MOUSE</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-1.5 md:mb-3 font-black text-[18px] md:text-[21px]">DETAIL</div><div className="text-white">TAP THE CIRCLES</div></div>
+            {/* Desktop instructions */}
+            <div className="hidden md:flex flex-wrap justify-center gap-14 mb-10 font-mono text-[19px]">
+              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">MOVE</div><div className="text-white">← → ↑ ↓</div></div>
+              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">VIEW</div><div className="text-white">DRAG MOUSE</div></div>
+              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">DETAIL</div><div className="text-white">TAP THE CIRCLES</div></div>
+            </div>
+            {/* Mobile instructions */}
+            <div className="flex md:hidden flex-wrap justify-center gap-6 mb-6 font-mono text-[14px]">
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-2 font-black text-[16px]">MOVE</div>
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" className="mb-1.5">
+                  <circle cx="20" cy="20" r="18" stroke="rgba(255,255,255,0.3)" strokeWidth="2" fill="rgba(0,94,153,0.15)"/>
+                  <circle cx="20" cy="20" r="7" fill="rgba(255,255,255,0.6)"/>
+                  <path d="M20 6 L20 10" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M20 30 L20 34" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M6 20 L10 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M30 20 L34 20" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <div className="text-white/80 text-[11px]">JOYSTICK</div>
+              </div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-2 font-black text-[16px]">LOOK</div>
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" className="mb-1.5">
+                  <path d="M10 20 Q14 14 20 14 Q26 14 30 20" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" fill="none"/>
+                  <path d="M13 20 L8 17 M13 20 L8 23" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M27 20 L32 17 M27 20 L32 23" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="20" cy="26" r="3" fill="rgba(255,255,255,0.5)"/>
+                  <circle cx="20" cy="26" r="5" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none"/>
+                </svg>
+                <div className="text-white/80 text-[11px]">SWIPE</div>
+              </div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-2 font-black text-[16px]">DETAIL</div>
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" className="mb-1.5">
+                  <circle cx="20" cy="20" r="12" stroke="#005e99" strokeWidth="2" fill="rgba(0,94,153,0.2)"/>
+                  <circle cx="20" cy="20" r="5" fill="white" opacity="0.7"/>
+                  <path d="M20 4 L20 8" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeLinecap="round"/>
+                  <path d="M20 32 L20 36" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeLinecap="round"/>
+                </svg>
+                <div className="text-white/80 text-[11px]">TAP CIRCLES</div>
+              </div>
             </div>
             <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => setShowOverlay(false)}>ENTER THE COURT</button>
           </div>
