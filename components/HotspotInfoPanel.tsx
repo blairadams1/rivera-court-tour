@@ -79,21 +79,21 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                 {/* Fullscreen toggle */}
                 <button
                   onClick={() => setIsFullscreen(f => !f)}
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all"
                   title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
                 >
                   {isFullscreen ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                   )}
                 </button>
                 {/* Close */}
                 <button 
                   onClick={onClose}
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-all"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
               </div>
             </div>
@@ -119,12 +119,12 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
 
                 {/* Image Gallery - Full Width */}
                   {displayHotspot.gallery && displayHotspot.gallery.length > 0 && (
-                    <div className="mb-6 md:mb-8 w-full">
+                    <div className="w-full">
                       <ImageGallery images={displayHotspot.gallery} />
                     </div>
                   )}
 
-                  <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-4">
+                  <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-2">
                     {displayHotspot.title}
                   </h2>
                   
@@ -179,8 +179,8 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                 className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-opacity duration-500 ${showScrollHint ? 'opacity-100' : 'opacity-0'}`}
               >
                 <div className="flex flex-col items-center animate-bounce">
-                  <span className="text-[7px] uppercase tracking-[0.2em] text-white/50 font-bold">Scroll</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeOpacity="0.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
+                  <span className="text-[9px] uppercase tracking-[0.2em] text-white font-bold">Scroll</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeOpacity="1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5">
                     <path d="M7 13l5 5 5-5"/>
                     <path d="M7 6l5 5 5-5"/>
                   </svg>
