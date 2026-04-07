@@ -66,7 +66,7 @@ const Hotspot: React.FC<HotspotProps> = ({
   });
 
   return (
-    <group position={offsetPosition} rotation={rotation} scale={[1.2, 1.2, 1]}>
+    <group position={offsetPosition} rotation={rotation} scale={[1.5, 1.5, 1]}>
       <pointLight ref={lightRef} color={baseColor} intensity={5} distance={15} decay={2} />
 
       {/* Inner ring */}
