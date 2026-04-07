@@ -61,7 +61,7 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
         className={`bg-black border-l md:border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col will-change-transform transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${
           isFullscreen
             ? 'fixed inset-0 w-full h-full max-w-none max-h-none rounded-none z-[200]'
-            : 'w-full h-full landscape:w-[40vw] landscape:max-w-[40vw] md:max-w-[410px] md:max-h-[92vh] md:rounded-2xl'
+            : 'w-full h-full landscape:w-[50vw] landscape:max-w-[50vw] md:w-[50vw] md:max-w-[50vw] md:max-h-[92vh] md:rounded-2xl'
         } ${
           isVisible ? 'translate-x-0' : 'translate-x-[calc(100%+2rem)]'
         }`}
