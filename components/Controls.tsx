@@ -4,6 +4,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { MOVEMENT_SPEED, LOOK_SENSITIVITY, COLLISION_BUFFER, ROOM_WIDTH, ROOM_DEPTH } from '../constants';
 import { WallSide } from '../types';
+import { joystickInput } from './VirtualJoystick';
 
 interface ControlsProps {
   targetY: number;
@@ -228,6 +229,13 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
       if (keys.current['s'] || keys.current['arrowdown']) velocity.current.sub(forward);
       if (keys.current['a'] || keys.current['arrowleft']) velocity.current.sub(right);
       if (keys.current['d'] || keys.current['arrowright']) velocity.current.add(right);
+
+      // Virtual joystick input (mobile)
+      if (Math.abs(joystickInput.x) > 0.05 || Math.abs(joystickInput.y) > 0.05) {
+        velocity.current.addScaledVector(right, joystickInput.x);
+        velocity.current.addScaledVector(forward, -joystickInput.y);
+        if (onNavigate) onNavigate();
+      }
 
       if (velocity.current.lengthSq() > 0) {
         velocity.current.normalize().multiplyScalar(MOVEMENT_SPEED);

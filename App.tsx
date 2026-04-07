@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import Experience from './components/Experience';
 import ScaffoldingSlider from './components/ScaffoldingSlider';
+import VirtualJoystick from './components/VirtualJoystick';
 import HotspotInfoPanel from './components/HotspotInfoPanel';
 import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
@@ -314,6 +315,7 @@ const App: React.FC = () => {
       </Canvas>
 
       <ScaffoldingSlider value={scaffoldHeight} onChange={setScaffoldHeight} />
+      <VirtualJoystick />
       
       {/* Detail Panel Layer */}
       <HotspotInfoPanel 
