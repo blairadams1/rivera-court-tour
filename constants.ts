@@ -25,8 +25,8 @@ export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/ri
 export const WALLS: WallConfig[] = [
   {
     side: WallSide.NORTH,
-    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fnorth_wall_hd.png?alt=media&token=92c5c751-df5b-4853-b9de-46c91bf58288',
-    lowResUrl: 'https://firebasestorage.googleapis.com/v0/b/rivera-court-mural-2451s.firebasestorage.app/o/mural_assets%2Fnorth_wall_hd.png?alt=media&token=92c5c751-df5b-4853-b9de-46c91bf58288',
+    imageUrl: '/NorthWallGoogleSmall.png',
+    lowResUrl: '/NorthWallGoogleSmall.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2],
