@@ -49,12 +49,12 @@ const Hotspot: React.FC<HotspotProps> = ({
     if (innerRingRef.current) {
       const s = isDragging ? 1.4 : 1.1 + Math.cos(t * 4) * 0.15;
       innerRingRef.current.scale.set(s, s, s);
-      (innerRingRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.8 : 0.6 + Math.cos(t * 4) * 0.3;
+      (innerRingRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.8 : 0.75 + Math.cos(t * 4) * 0.25;
     }
     if (coreRef.current) {
       const s = isDragging ? 1.5 : 1.2 + Math.sin(t * 6) * 0.2;
       coreRef.current.scale.setScalar(s);
-      (coreRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.9 : 0.3 + Math.sin(t * 2) * 0.25;
+      (coreRef.current.material as THREE.MeshBasicMaterial).opacity = isDragging ? 0.9 : 0.75 + Math.sin(t * 2) * 0.25;
     }
     if (lightRef.current) {
       lightRef.current.intensity = isDragging ? 15 : 4 + Math.sin(t * 7) * 2.0;
