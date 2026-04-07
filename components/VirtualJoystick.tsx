@@ -4,8 +4,8 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 // Shared ref that Controls.tsx reads each frame
 export const joystickInput = { x: 0, y: 0 };
 
-const JOYSTICK_SIZE = 120;
-const KNOB_SIZE = 48;
+const JOYSTICK_SIZE = 60;
+const KNOB_SIZE = 24;
 const MAX_DISTANCE = (JOYSTICK_SIZE - KNOB_SIZE) / 2;
 
 const VirtualJoystick: React.FC = () => {
@@ -82,7 +82,7 @@ const VirtualJoystick: React.FC = () => {
   return (
     <div
       className="fixed z-[100] pointer-events-auto"
-      style={{ bottom: 36, left: 24 }}
+      style={{ bottom: 36, right: 24 }}
     >
       <div
         ref={baseRef}
@@ -107,7 +107,7 @@ const VirtualJoystick: React.FC = () => {
       >
         {/* Direction arrows */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <svg width="30" height="30" viewBox="0 0 60 60" fill="none">
             {/* Up */}
             <path d="M30 8 L34 16 L26 16 Z" fill="white"/>
             {/* Down */}
