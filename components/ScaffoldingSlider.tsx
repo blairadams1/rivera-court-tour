@@ -7,7 +7,7 @@ interface ScaffoldingSliderProps {
   onChange: (val: number) => void;
 }
 
-const SLIDER_HEIGHT = 400;
+const SLIDER_HEIGHT = 200;
 
 const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }) => {
   const [isDragging, setIsDragging] = useState(false);
