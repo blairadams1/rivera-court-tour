@@ -124,7 +124,7 @@ const HotspotInfoPanel: React.FC<HotspotInfoPanelProps> = ({ hotspot, isVisible,
                     </div>
                   )}
 
-                  <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-2">
+                  <h2 className="font-serif text-2xl md:text-4xl mb-4 md:mb-6 text-white leading-tight tracking-tight px-6 md:px-8 mt-1">
                     {displayHotspot.title}
                   </h2>
                   
