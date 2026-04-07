@@ -218,7 +218,7 @@ const App: React.FC = () => {
       
       {/* HUD Layer - Always on top */}
       {!isAdminMode && !showOverlay && (
-        <div className="fixed bottom-10 left-10 z-[200] flex flex-col items-center gap-3 pointer-events-none animate-in slide-in-from-bottom-10 duration-700" style={{ width: '200px' }}>
+        <div className="fixed bottom-4 left-4 z-[200] flex flex-col items-center gap-3 pointer-events-none animate-in slide-in-from-bottom-10 duration-700" style={{ width: '200px' }}>
           <div className="flex items-center justify-center gap-2 pointer-events-auto">
               <button 
                 onClick={(e) => { e.stopPropagation(); navigate('prev'); }}

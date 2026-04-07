@@ -44,7 +44,7 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
   };
 
   return (
-    <div className="fixed right-12 top-1/2 -translate-y-1/2 flex items-center z-20 select-none touch-none">
+    <div className="fixed left-4 top-1/2 -translate-y-1/2 flex items-center z-20 select-none touch-none">
       
       {/* Label with Blue Backdrop - Restored to left position with reduced height */}
       <div className="absolute -left-[54px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap">
