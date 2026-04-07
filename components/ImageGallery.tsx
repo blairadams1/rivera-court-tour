@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { GalleryImage } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -26,10 +26,18 @@ const slideVariants = {
 
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const [direction, setDirection] = useState(0);
 
+  // Reset index when images array changes (e.g. switching hotspots)
+  useEffect(() => {
+    setCurrentIndex(0);
+    setDirection(0);
+  }, [images]);
+
   if (!images || images.length === 0) return null;
+
+  // Safety clamp in case state hasn't caught up yet
+  const safeIndex = Math.min(currentIndex, images.length - 1);
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -51,7 +59,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
     }
   };
 
-  const currentImage = images[currentIndex];
+  const currentImage = images[safeIndex];
+
+  if (!currentImage) return null;
 
   return (
     <div className="relative group w-full overflow-hidden bg-black/40">
