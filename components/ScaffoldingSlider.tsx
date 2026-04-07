@@ -46,11 +46,11 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
   return (
     <div className="fixed right-12 top-[38%] -translate-y-1/2 flex items-center z-20 select-none touch-none">
       
-      {/* Label with Blue Backdrop - Restored to left position with reduced height */}
-      <div className="absolute -left-[54px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap">
-        <div className="bg-[#005e99] px-5 py-1.5 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.4)] border border-white/10">
-          <span className="text-[10px] font-black uppercase tracking-[0.45em] text-white">
-            Scaffolding Elevation
+      {/* Label with Blue Backdrop */}
+      <div className="absolute -left-[46px] top-1/2 -translate-y-1/2 -rotate-90 origin-center whitespace-nowrap hidden md:block">
+        <div className="bg-[#005e99] px-3 py-1 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.4)] border border-white/10">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
+            Scaffold Elevation
           </span>
         </div>
       </div>
