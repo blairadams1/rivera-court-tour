@@ -19,7 +19,10 @@ const ScaffoldingSlider: React.FC<ScaffoldingSliderProps> = ({ value, onChange }
   const percent = ((value - EYE_LEVEL) / (MAX_LIFT - EYE_LEVEL)) * 100;
 
   const updateValueFromPointer = useCallback((clientY: number) => {
-    const el = containerRef.current || mobileContainerRef.current;
+    // Pick whichever container is actually visible (has layout dimensions)
+    const desktopEl = containerRef.current;
+    const mobileEl = mobileContainerRef.current;
+    const el = (desktopEl && desktopEl.offsetHeight > 0) ? desktopEl : mobileEl;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const relativeY = Math.max(0, Math.min(1, 1 - (clientY - rect.top) / rect.height));
