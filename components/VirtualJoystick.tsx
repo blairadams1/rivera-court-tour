@@ -82,7 +82,7 @@ const VirtualJoystick: React.FC = () => {
   return (
     <div
       className="fixed z-[100] pointer-events-auto"
-      style={{ bottom: 20, left: 14 }}
+      style={{ bottom: 20, right: 14 }}
     >
       <div
         ref={baseRef}
