@@ -25,8 +25,8 @@ export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/ri
 export const WALLS: WallConfig[] = [
   {
     side: WallSide.NORTH,
-    imageUrl: '/NorthWallGoogleSmall.png',
-    lowResUrl: '/NorthWallGoogleSmall.png',
+    imageUrl: '/NorthWall11.png',
+    lowResUrl: '/NorthWall11.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2],
@@ -34,8 +34,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.SOUTH,
-    imageUrl: '/South Wall Google1.png',
-    lowResUrl: '/South Wall Google1.png',
+    imageUrl: '/SouthWall11.png',
+    lowResUrl: '/SouthWall11.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2],
@@ -43,8 +43,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: '/dezoomify-result East Small G.png',
-    lowResUrl: '/dezoomify-result East Small G.png',
+    imageUrl: '/EastWall11.png',
+    lowResUrl: '/EastWall11.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
@@ -52,8 +52,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: '/dezoomify-result West Small G.png',
-    lowResUrl: '/dezoomify-result West Small G.png',
+    imageUrl: '/WestWall11.png',
+    lowResUrl: '/WestWall11.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
