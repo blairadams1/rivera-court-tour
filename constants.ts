@@ -7,6 +7,10 @@ export const ROOM_WIDTH = 66;
 export const ROOM_DEPTH = 44;
 export const ROOM_HEIGHT = 38;
 
+// Base room aliases (original box walls — used for dynamic bounds expansion)
+export const BASE_ROOM_WIDTH = ROOM_WIDTH;
+export const BASE_ROOM_DEPTH = ROOM_DEPTH;
+
 export const EYE_LEVEL = 6.0;
 export const MAX_LIFT = 30.0;
 

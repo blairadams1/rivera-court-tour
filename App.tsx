@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import Experience from './components/Experience';
@@ -8,11 +8,12 @@ import VirtualJoystick from './components/VirtualJoystick';
 import HotspotInfoPanel from './components/HotspotInfoPanel';
 import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
-import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT } from './constants';
-import { Hotspot, WallSide } from './types';
+import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT, COLLISION_BUFFER } from './constants';
+import { Hotspot, WallSide, InteriorWall } from './types';
 import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import GizmoToolbar from './components/GizmoToolbar';
 
 const INITIAL_HOTSPOTS: Hotspot[] = [
   {
@@ -91,6 +92,14 @@ const App: React.FC = () => {
   const [hotspotsVisible, setHotspotsVisible] = useState(true);
   const showAdminButton = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('admin');
 
+  // Interior walls state
+  const [interiorWalls, setInteriorWalls] = useState<InteriorWall[]>([]);
+  const [editingWall, setEditingWall] = useState<InteriorWall | null>(null);
+
+  // Gizmo state
+  const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
+  const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
+
   // One-time seed: only runs if the 'metadata/seeded' flag doesn't exist yet
   useEffect(() => {
     const seedIfNeeded = async () => {
@@ -114,6 +123,33 @@ const App: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Live-sync interior walls from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'interiorWalls'), (snapshot) => {
+      const fetched = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as InteriorWall));
+      setInteriorWalls(fetched);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Dynamic bounds based on placed walls/floors
+  const effectiveBounds = useMemo(() => {
+    let maxX = ROOM_WIDTH / 2;
+    let maxZ = ROOM_DEPTH / 2;
+    for (const w of interiorWalls) {
+      const halfW = w.scale[0] / 2;
+      const halfH = w.type === 'floor' ? w.scale[1] / 2 : 0;
+      const rad = (w.rotation * Math.PI) / 180;
+      const cos = Math.abs(Math.cos(rad));
+      const sin = Math.abs(Math.sin(rad));
+      const extentX = halfW * cos + halfH * sin;
+      const extentZ = halfW * sin + halfH * cos;
+      maxX = Math.max(maxX, Math.abs(w.position[0]) + extentX + COLLISION_BUFFER);
+      maxZ = Math.max(maxZ, Math.abs(w.position[2]) + extentZ + COLLISION_BUFFER);
+    }
+    return { halfWidth: maxX, halfDepth: maxZ };
+  }, [interiorWalls]);
 
   const focusOnHotspot = useCallback((hotspot: Hotspot) => {
     setActiveHotspot(hotspot);
@@ -211,6 +247,87 @@ const App: React.FC = () => {
     setIsSidebarVisible(false); // Hide sidebar when free-navigating
     setHasNavigated(true);
   }, [scaffoldHeight]);
+
+  // --- Interior Wall CRUD ---
+  const handleAddWall = useCallback(async (type: 'wall' | 'floor') => {
+    const newWall: InteriorWall = {
+      id: `iw-${Date.now()}`,
+      type,
+      imageUrl: '',
+      position: type === 'floor' ? [0, 0.05, 0] : [0, 10, 0],
+      rotation: 0,
+      scale: [10, 10],
+      label: ''
+    };
+    await setDoc(doc(db, 'interiorWalls', newWall.id), newWall);
+    setSelectedWallId(newWall.id);
+    setEditingWall(null);
+  }, []);
+
+  const handleSaveWall = useCallback(async (wall: InteriorWall) => {
+    await setDoc(doc(db, 'interiorWalls', wall.id), wall);
+    // Update local editing state to keep editor in sync
+    setEditingWall(wall);
+  }, []);
+
+  const handleDeleteWall = useCallback(async (id: string) => {
+    await deleteDoc(doc(db, 'interiorWalls', id));
+    setEditingWall(null);
+  }, []);
+
+  const handleEditWall = useCallback((wall: InteriorWall) => {
+    setEditingWall(wall);
+    setSelectedWallId(null); // close gizmo when opening popup editor
+  }, []);
+
+  const handleInteriorWallClick = useCallback((wall: InteriorWall) => {
+    if (isAdminMode) {
+      // Select wall for gizmo controls (not popup)
+      setSelectedWallId(prev => prev === wall.id ? null : wall.id);
+      setEditingWall(null);
+    }
+  }, [isAdminMode]);
+
+  const handleWallTransformEnd = useCallback(async (wall: InteriorWall) => {
+    await setDoc(doc(db, 'interiorWalls', wall.id), wall);
+  }, []);
+
+  // Handle inline property changes from GizmoToolbar scrubbers
+  const handleGizmoPropertyChange = useCallback(async (wall: InteriorWall) => {
+    // Update local state immediately for responsive feel
+    setInteriorWalls(prev => prev.map(w => w.id === wall.id ? wall : w));
+    // Persist to Firestore
+    await setDoc(doc(db, 'interiorWalls', wall.id), wall);
+  }, []);
+
+  // Keyboard shortcuts for gizmo modes
+  useEffect(() => {
+    if (!isAdminMode) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle when a wall is selected and not in text input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+      if (selectedWallId) {
+        switch (e.key) {
+          case '1': setTransformMode('translate'); break;
+          case '2': setTransformMode('rotate'); break;
+          case '3': setTransformMode('scale'); break;
+          case 'g': case 'G': setTransformMode('translate'); break;
+          case 'r': case 'R': setTransformMode('rotate'); break;
+          case 's': case 'S': setTransformMode('scale'); break;
+          case 'Escape': setSelectedWallId(null); break;
+          case 'Delete': case 'Backspace': {
+            handleDeleteWall(selectedWallId);
+            setSelectedWallId(null);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdminMode, selectedWallId, handleDeleteWall]);
 
   return (
     <div className="relative w-full h-screen bg-[#050505] text-white select-none overflow-hidden">
@@ -310,12 +427,41 @@ const App: React.FC = () => {
             isSidebarOpen={!isAdminMode && isSidebarVisible}
             onNavigate={handleNavigate}
             hotspotsVisible={hotspotsVisible}
+            interiorWalls={interiorWalls}
+            onInteriorWallClick={handleInteriorWallClick}
+            effectiveBounds={effectiveBounds}
+            selectedWallId={selectedWallId}
+            transformMode={transformMode}
+            onWallTransformEnd={handleWallTransformEnd}
           />
         </Suspense>
       </Canvas>
 
       <ScaffoldingSlider value={scaffoldHeight} onChange={setScaffoldHeight} />
       <VirtualJoystick />
+
+      {/* Gizmo Transform Toolbar */}
+      {isAdminMode && selectedWallId && !editingWall && (() => {
+        const selectedWall = interiorWalls.find(w => w.id === selectedWallId);
+        if (!selectedWall) return null;
+        return (
+          <GizmoToolbar
+            wall={selectedWall}
+            transformMode={transformMode}
+            onTransformModeChange={setTransformMode}
+            onOpenEditor={() => {
+              setEditingWall(selectedWall);
+              setSelectedWallId(null);
+            }}
+            onDelete={() => {
+              handleDeleteWall(selectedWallId);
+              setSelectedWallId(null);
+            }}
+            onDeselect={() => setSelectedWallId(null)}
+            onPropertyChange={handleGizmoPropertyChange}
+          />
+        );
+      })()}
       
       {/* Detail Panel Layer */}
       <HotspotInfoPanel 
@@ -331,7 +477,16 @@ const App: React.FC = () => {
           onSave={handleSaveHotspot} 
           onEdit={(h) => focusOnHotspot(h)} 
           onDelete={handleDeleteHotspot} 
-          onCancel={() => setEditingHotspot(null)} 
+          onCancel={() => setEditingHotspot(null)}
+          interiorWalls={interiorWalls}
+          editingWall={editingWall}
+          selectedWallId={selectedWallId}
+          onAddWall={handleAddWall}
+          onSaveWall={handleSaveWall}
+          onSelectWall={handleInteriorWallClick}
+          onEditWall={handleEditWall}
+          onDeleteWall={handleDeleteWall}
+          onCancelWallEdit={() => setEditingWall(null)}
         />
       )}
 

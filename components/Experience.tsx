@@ -4,10 +4,11 @@ import { MeshReflectorMaterial, Environment, Stars, useTexture } from '@react-th
 import * as THREE from 'three';
 import MuralWall from './MuralWall';
 import Hotspot from './Hotspot';
+import PlacedWall from './PlacedWall';
 import Controls from './Controls';
 import CameraTracker from './CameraTracker';
 import { WALLS, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, FLOOR_IMAGE_URL, CEILING_IMAGE_URL } from '../constants';
-import { Hotspot as HotspotType, WallSide } from '../types';
+import { Hotspot as HotspotType, WallSide, InteriorWall } from '../types';
 
 interface ExperienceProps {
   scaffoldHeight: number;
@@ -23,6 +24,12 @@ interface ExperienceProps {
   isSidebarOpen?: boolean;
   onNavigate?: () => void;
   hotspotsVisible?: boolean;
+  interiorWalls?: InteriorWall[];
+  onInteriorWallClick?: (wall: InteriorWall) => void;
+  effectiveBounds?: { halfWidth: number; halfDepth: number };
+  selectedWallId?: string | null;
+  transformMode?: 'translate' | 'rotate' | 'scale';
+  onWallTransformEnd?: (wall: InteriorWall) => void;
 }
 
 const Experience: React.FC<ExperienceProps> = ({ 
@@ -38,7 +45,13 @@ const Experience: React.FC<ExperienceProps> = ({
   teleportTarget,
   isSidebarOpen = false,
   onNavigate,
-  hotspotsVisible = true
+  hotspotsVisible = true,
+  interiorWalls = [],
+  onInteriorWallClick,
+  effectiveBounds,
+  selectedWallId = null,
+  transformMode = 'translate',
+  onWallTransformEnd
 }) => {
   const floorTexture = useTexture(FLOOR_IMAGE_URL);
   const ceilingTexture = useTexture(CEILING_IMAGE_URL);
@@ -116,6 +129,19 @@ const Experience: React.FC<ExperienceProps> = ({
         />
       ))}
 
+      {/* Interior Walls & Floors */}
+      {interiorWalls.map((wall) => (
+        <PlacedWall
+          key={wall.id}
+          wall={wall}
+          isAdminMode={isAdminMode}
+          isSelected={selectedWallId === wall.id}
+          transformMode={transformMode}
+          onSelect={onInteriorWallClick || (() => {})}
+          onTransformEnd={onWallTransformEnd || (() => {})}
+        />
+      ))}
+
       {/* Floor with provided Image and Subtle Reflection */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
@@ -173,6 +199,7 @@ const Experience: React.FC<ExperienceProps> = ({
         teleportTarget={teleportTarget} 
         isSidebarOpen={isSidebarOpen} 
         onNavigate={onNavigate}
+        effectiveBounds={effectiveBounds}
       />
       <CameraTracker />
       <Environment preset="studio" />

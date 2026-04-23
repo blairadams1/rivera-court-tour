@@ -43,3 +43,15 @@ export interface Hotspot {
   mediaUrl?: string; // Kept for backwards compatibility / single media
   gallery?: GalleryImage[];
 }
+
+export type PlacedWallType = 'wall' | 'floor';
+
+export interface InteriorWall {
+  id: string;
+  type: PlacedWallType;       // 'wall' = vertical plane, 'floor' = horizontal plane
+  imageUrl: string;            // Firebase Storage download URL
+  position: [number, number, number]; // world XYZ center
+  rotation: number;            // Y-axis rotation: 0, 90, 180, or 270 degrees
+  scale: [number, number];     // [width, height] in feet-units
+  label: string;               // admin-only label
+}

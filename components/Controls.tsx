@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { MOVEMENT_SPEED, LOOK_SENSITIVITY, COLLISION_BUFFER, ROOM_WIDTH, ROOM_DEPTH } from '../constants';
 import { WallSide } from '../types';
 import { joystickInput } from './VirtualJoystick';
+import { gizmoState } from './gizmoState';
 
 interface ControlsProps {
   targetY: number;
@@ -12,9 +13,10 @@ interface ControlsProps {
   teleportTarget?: [number, number, number] | null;
   isSidebarOpen?: boolean;
   onNavigate?: () => void;
+  effectiveBounds?: { halfWidth: number; halfDepth: number };
 }
 
-const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarget, isSidebarOpen, onNavigate }) => {
+const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarget, isSidebarOpen, onNavigate, effectiveBounds }) => {
   const { camera, gl } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
   const isDragging = useRef(false);
@@ -46,7 +48,7 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     };
     const handleMouseUp = () => (isDragging.current = false);
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
+      if (!isDragging.current || gizmoState.isDragging) return;
       if (onNavigate) onNavigate();
       euler.current.setFromQuaternion(camera.quaternion);
       euler.current.y -= e.movementX * LOOK_SENSITIVITY;
@@ -65,7 +67,7 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging.current || !previousTouch.current) return;
+      if (!isDragging.current || !previousTouch.current || gizmoState.isDragging) return;
       if (e.touches.length === 1) {
         if (onNavigate) onNavigate();
         const touch = e.touches[0];
@@ -246,8 +248,8 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     // Enforce minimum camera height of 6 feet at all times
     camera.position.y = Math.max(camera.position.y, MIN_CAM_HEIGHT);
 
-    const halfWidth = ROOM_WIDTH / 2 - COLLISION_BUFFER;
-    const halfDepth = ROOM_DEPTH / 2 - COLLISION_BUFFER;
+    const halfWidth = (effectiveBounds?.halfWidth ?? ROOM_WIDTH / 2) - COLLISION_BUFFER;
+    const halfDepth = (effectiveBounds?.halfDepth ?? ROOM_DEPTH / 2) - COLLISION_BUFFER;
     camera.position.x = Math.max(-halfWidth, Math.min(halfWidth, camera.position.x));
     camera.position.z = Math.max(-halfDepth, Math.min(halfDepth, camera.position.z));
   });
