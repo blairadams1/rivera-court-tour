@@ -7,6 +7,10 @@ export const ROOM_WIDTH = 66;
 export const ROOM_DEPTH = 44;
 export const ROOM_HEIGHT = 38;
 
+// Base room aliases (original box walls — used for dynamic bounds expansion)
+export const BASE_ROOM_WIDTH = ROOM_WIDTH;
+export const BASE_ROOM_DEPTH = ROOM_DEPTH;
+
 export const EYE_LEVEL = 6.0;
 export const MAX_LIFT = 30.0;
 
@@ -25,8 +29,8 @@ export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/ri
 export const WALLS: WallConfig[] = [
   {
     side: WallSide.NORTH,
-    imageUrl: '/NorthWall11.png',
-    lowResUrl: '/NorthWall11.png',
+    imageUrl: '/NorthWall4.png',
+    lowResUrl: '/NorthWall4.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2],
@@ -34,8 +38,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.SOUTH,
-    imageUrl: '/SouthWall11.png',
-    lowResUrl: '/SouthWall11.png',
+    imageUrl: '/SouthWall4.png',
+    lowResUrl: '/SouthWall4.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2],
@@ -43,8 +47,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: '/EastWall11.png',
-    lowResUrl: '/EastWall11.png',
+    imageUrl: '/EastWall4.png',
+    lowResUrl: '/EastWall4.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
@@ -52,8 +56,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: '/WestWall22.png',
-    lowResUrl: '/WestWall22.png',
+    imageUrl: '/WestWall4.png',
+    lowResUrl: '/WestWall4.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
