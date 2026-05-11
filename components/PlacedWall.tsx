@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { TransformControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteriorWall } from '../types';
@@ -18,7 +18,7 @@ interface PlacedWallProps {
 const PlacedWall: React.FC<PlacedWallProps> = ({
   wall, isAdminMode, isSelected, transformMode, onSelect, onTransformEnd
 }) => {
-  const { gl } = useThree();
+  const { gl, camera } = useThree();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [hasAlpha, setHasAlpha] = useState(false);
   const [pivotMounted, setPivotMounted] = useState(false);
@@ -72,9 +72,28 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     // For walls the pivot sits at the base: center_y − half_height
     const baseY = isFloor ? wall.position[1] : wall.position[1] - wall.scale[1] / 2;
     pivotRef.current.position.set(wall.position[0], baseY, wall.position[2]);
-    pivotRef.current.rotation.set(pivotRotation[0], pivotRotation[1], pivotRotation[2]);
+    // Only set rotation from props when NOT in billboard mode
+    // (billboard mode handles rotation in useFrame)
+    if (!wall.billboard || isFloor) {
+      pivotRef.current.rotation.set(pivotRotation[0], pivotRotation[1], pivotRotation[2]);
+    }
     pivotRef.current.scale.set(wall.scale[0], wall.scale[1], 1);
-  }, [wall.position, wall.rotation, wall.scale, wall.type, pivotMounted]);
+  }, [wall.position, wall.rotation, wall.scale, wall.type, wall.billboard, pivotMounted]);
+
+  // ---- Billboard: rotate Y to always face camera ----
+  useFrame(() => {
+    if (!pivotRef.current || !wall.billboard || isFloor) return;
+    // Don't override rotation while gizmo is being dragged in rotate mode
+    if (gizmoState.isDragging && transformMode === 'rotate') return;
+
+    const pivot = pivotRef.current;
+    // Compute angle from pivot to camera on the XZ plane
+    const dx = camera.position.x - pivot.position.x;
+    const dz = camera.position.z - pivot.position.z;
+    const angle = Math.atan2(dx, dz); // Y rotation to face camera
+
+    pivot.rotation.set(0, angle, 0);
+  });
 
   // ---- TransformControls dragging-changed listener ----
   useEffect(() => {
@@ -100,9 +119,13 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
         ];
 
         // Rotation: extract Y in degrees
-        let yRotDeg = ((pivot.rotation.y * 180) / Math.PI) % 360;
-        if (yRotDeg < 0) yRotDeg += 360;
-        const snappedRot = Math.round(yRotDeg);
+        // For billboard walls, preserve the stored rotation (don't read the live camera-facing angle)
+        let snappedRot = wall.rotation;
+        if (!wall.billboard || isFloor) {
+          let yRotDeg = ((pivot.rotation.y * 180) / Math.PI) % 360;
+          if (yRotDeg < 0) yRotDeg += 360;
+          snappedRot = Math.round(yRotDeg);
+        }
 
         // Scale: read and round to 0.5
         const newScale: [number, number] = [

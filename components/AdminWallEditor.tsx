@@ -116,6 +116,25 @@ const AdminWallEditor: React.FC<AdminWallEditorProps> = ({ wall, onSave, onDelet
           />
         </div>
 
+        {/* Billboard / Look At */}
+        {formData.type !== 'floor' && (
+          <label className="flex items-center gap-3 cursor-pointer group py-1" onClick={() => setFormData(prev => ({ ...prev, billboard: !prev.billboard }))}>
+            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+              formData.billboard
+                ? 'bg-[#005e99] border-[#005e99]'
+                : 'border-white/20 group-hover:border-white/40'
+            }`}>
+              {formData.billboard && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              )}
+            </div>
+            <div>
+              <span className="text-[10px] uppercase tracking-widest text-white/60 font-black block">Look At Camera</span>
+              <span className="text-[8px] text-white/25">Panel always faces the viewer for depth illusion</span>
+            </div>
+          </label>
+        )}
+
         {/* Info readout */}
         <div className="bg-black/30 border border-white/5 rounded-lg p-3">
           <p className="text-[8px] uppercase tracking-widest text-white/20 font-black mb-1">Transform Info</p>
@@ -124,6 +143,7 @@ const AdminWallEditor: React.FC<AdminWallEditorProps> = ({ wall, onSave, onDelet
           </p>
           <p className="text-[10px] text-white/40 font-mono">
             Scale: {formData.scale[0].toFixed(1)} × {formData.scale[1].toFixed(1)} ft · Rotation: {formData.rotation}°
+            {formData.billboard ? ' · Billboard' : ''}
           </p>
           <p className="text-[8px] text-white/15 mt-1 italic">
             Use the 3D gizmo controls in the viewport to adjust transforms

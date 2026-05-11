@@ -54,4 +54,5 @@ export interface InteriorWall {
   rotation: number;            // Y-axis rotation: 0, 90, 180, or 270 degrees
   scale: [number, number];     // [width, height] in feet-units
   label: string;               // admin-only label
+  billboard?: boolean;         // if true, plane always faces camera (Y-axis only)
 }

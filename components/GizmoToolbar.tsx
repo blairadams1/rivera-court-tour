@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Copy, X } from 'lucide-react';
+import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
 import { InteriorWall } from '../types';
 
 interface GizmoToolbarProps {
@@ -136,10 +136,15 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
     onPropertyChange({
       ...wall,
       type,
+      billboard: type === 'floor' ? false : wall.billboard, // disable billboard for floors
       position: type === 'floor'
         ? [wall.position[0], 0.05, wall.position[2]]
         : [wall.position[0], wall.position[1] < 1 ? 10 : wall.position[1], wall.position[2]]
     });
+  }, [wall, onPropertyChange]);
+
+  const toggleBillboard = useCallback(() => {
+    onPropertyChange({ ...wall, billboard: !wall.billboard });
   }, [wall, onPropertyChange]);
 
   return (
@@ -225,6 +230,20 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
             </button>
           </div>
 
+          {/* Billboard / Look-At toggle */}
+          {wall.type !== 'floor' && (
+            <button
+              onClick={toggleBillboard}
+              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black transition-all ${
+                wall.billboard ? 'bg-[#005e99] text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+              }`}
+              title="Billboard: panel always faces camera"
+            >
+              <Eye size={13} />
+              <span className="hidden xl:inline">Look At</span>
+            </button>
+          )}
+
           {/* Separator */}
           <div className="w-px h-6 bg-white/10 mx-1"></div>
 
@@ -308,10 +327,29 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
               </div>
             </div>
 
+            {/* Options */}
+            {wall.type !== 'floor' && (
+              <div className="mt-3 pt-3 border-t border-white/5">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                    wall.billboard
+                      ? 'bg-[#005e99] border-[#005e99]'
+                      : 'border-white/20 group-hover:border-white/40'
+                  }`}>
+                    {wall.billboard && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    )}
+                  </div>
+                  <span className="text-[9px] uppercase tracking-widest text-white/50 font-black">Billboard / Look At Camera</span>
+                  <span className="text-[8px] text-white/20 ml-auto">always faces viewer</span>
+                </label>
+              </div>
+            )}
+
             {/* Compact info */}
             <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
               <span className="text-[8px] text-white/20 font-mono tracking-wider">
-                {wall.label || wall.id} · {wall.type}
+                {wall.label || wall.id} · {wall.type}{wall.billboard ? ' · billboard' : ''}
               </span>
               <span className="text-[8px] text-white/15 font-mono">
                 SHIFT+drag for fine control
