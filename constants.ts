@@ -38,8 +38,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.SOUTH,
-    imageUrl: '/SouthWall4.png',
-    lowResUrl: '/SouthWall4.png',
+    imageUrl: '/SouthWall4c.png',
+    lowResUrl: '/SouthWall4c.png',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2],
