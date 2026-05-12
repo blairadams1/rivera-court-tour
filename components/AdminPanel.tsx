@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Hotspot, MediaType, GalleryImage, InteriorWall } from '../types';
 import { AdminGalleryEditor } from './AdminGalleryEditor';
 import AdminWallEditor from './AdminWallEditor';
-import { Image as ImageIcon, Plus, Layers } from 'lucide-react';
+import { Image as ImageIcon, Plus, Layers, Lock, Unlock } from 'lucide-react';
+import { gizmoState } from './gizmoState';
 
 interface AdminPanelProps {
   hotspots: Hotspot[];
@@ -29,6 +30,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   interiorWalls, editingWall, selectedWallId, onAddWall, onSaveWall, onSelectWall, onEditWall, onDeleteWall, onCancelWallEdit
 }) => {
   const [formData, setFormData] = useState<Partial<Hotspot>>({ title: '', description: '', mediaType: 'none', mediaUrl: '', gallery: [] });
+  const [hotspotLocked, setHotspotLocked] = useState(gizmoState.hotspotLocked);
 
   useEffect(() => {
     if (editingHotspot) setFormData(editingHotspot);
@@ -53,6 +55,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       <div className="flex items-center gap-2 mb-3">
         <div className="w-2 h-2 bg-[#005e99] rounded-full shadow-[0_0_8px_#005e99]"></div>
         <h3 className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-black">EXPLORE</h3>
+        <button
+          className={`ml-auto flex items-center gap-1 px-2 py-0.5 rounded text-[8px] uppercase tracking-widest font-black transition-all border ${
+            hotspotLocked
+              ? 'bg-red-500/20 border-red-500/30 text-red-400 hover:bg-red-500/30'
+              : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30'
+          }`}
+          onClick={() => {
+            const next = !hotspotLocked;
+            setHotspotLocked(next);
+            gizmoState.hotspotLocked = next;
+          }}
+          title={hotspotLocked ? 'Hotspots locked — click to unlock' : 'Hotspots unlocked — click to lock'}
+        >
+          {hotspotLocked ? <Lock size={8} /> : <Unlock size={8} />}
+          {hotspotLocked ? 'Locked' : 'Active'}
+        </button>
       </div>
       
       <div className="text-[9px] uppercase tracking-[0.2em] text-[#005e99] mb-2 font-black">
