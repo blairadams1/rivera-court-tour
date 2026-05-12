@@ -55,11 +55,15 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
   }, []);
 
   // ---- Compute rotation ----
-  const yRotation = (wall.rotation * Math.PI) / 180;
+  // Migrate legacy single-number (Y-only) rotation to [x, y, z] tuple
+  const rot = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation, 0];
+  const xRot = (rot[0] * Math.PI) / 180;
+  const yRot = (rot[1] * Math.PI) / 180;
+  const zRot = (rot[2] * Math.PI) / 180;
   const isFloor = wall.type === 'floor';
   const pivotRotation: [number, number, number] = isFloor
-    ? [-Math.PI / 2, yRotation, 0]
-    : [0, yRotation, 0];
+    ? [-Math.PI / 2 + xRot, yRot, zRot]
+    : [xRot, yRot, zRot];
 
   // Mesh offset: for walls, shift up by 0.5 in local space so the
   // pivot group's origin sits at the bottom edge of the plane.
@@ -118,13 +122,19 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
           Math.round(pivot.position.z * 2) / 2
         ];
 
-        // Rotation: extract Y in degrees
-        // For billboard walls, preserve the stored rotation (don't read the live camera-facing angle)
-        let snappedRot = wall.rotation;
+        // Rotation: extract all three axes in degrees
+        let snappedRot: [number, number, number] = Array.isArray(wall.rotation) ? [...wall.rotation] : [0, wall.rotation, 0];
         if (!wall.billboard || isFloor) {
-          let yRotDeg = ((pivot.rotation.y * 180) / Math.PI) % 360;
-          if (yRotDeg < 0) yRotDeg += 360;
-          snappedRot = Math.round(yRotDeg);
+          // For floors, we added -PI/2 to X for the horizontal orientation,
+          // so subtract that base offset back out before storing
+          const baseX = isFloor ? -Math.PI / 2 : 0;
+          let xDeg = (((pivot.rotation.x - baseX) * 180) / Math.PI) % 360;
+          let yDeg = ((pivot.rotation.y * 180) / Math.PI) % 360;
+          let zDeg = ((pivot.rotation.z * 180) / Math.PI) % 360;
+          if (xDeg < 0) xDeg += 360;
+          if (yDeg < 0) yDeg += 360;
+          if (zDeg < 0) zDeg += 360;
+          snappedRot = [Math.round(xDeg), Math.round(yDeg), Math.round(zDeg)];
         }
 
         // Scale: read and round to 0.5
@@ -136,7 +146,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
         onTransformEnd({
           ...wall,
           position: pos,
-          rotation: snappedRot % 360,
+          rotation: snappedRot,
           scale: newScale
         });
       }
@@ -149,7 +159,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
   // ---- Axis visibility per transform mode ----
   const axisVisibility = useMemo(() => {
     switch (transformMode) {
-      case 'rotate':  return { showX: false, showY: true, showZ: false };
+      case 'rotate':  return { showX: true, showY: true, showZ: true };
       case 'scale':   return { showX: true, showY: true, showZ: false };
       default:        return { showX: true, showY: true, showZ: true };
     }
