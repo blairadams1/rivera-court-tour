@@ -16,7 +16,7 @@ interface AdminPanelProps {
   interiorWalls: InteriorWall[];
   editingWall: InteriorWall | null;
   selectedWallId: string | null;
-  onAddWall: (type: 'wall' | 'floor') => void;
+  onAddWall: (type: 'wall' | 'floor' | 'ceiling') => void;
   onSaveWall: (wall: InteriorWall) => void;
   onSelectWall: (wall: InteriorWall) => void;
   onEditWall: (wall: InteriorWall) => void;
@@ -106,10 +106,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
               <span className={`truncate block font-medium ${
                 selectedWallId === w.id ? 'text-white' : 'text-white/60 group-hover:text-white'
               }`}>
-                {w.label || `${w.type === 'floor' ? 'Floor' : 'Wall'} ${w.id.slice(-4)}`}
+                {w.label || `${w.type === 'floor' ? 'Floor' : w.type === 'ceiling' ? 'Ceiling' : 'Wall'} ${w.id.slice(-4)}`}
               </span>
               <span className="text-[8px] text-white/30 font-mono">
-                {w.scale[0]}×{w.scale[1]}ft · {w.rotation}°
+                {w.scale[0]}×{w.scale[1]}ft · {Array.isArray(w.rotation) ? `${w.rotation[1]}°` : `${w.rotation}°`}
               </span>
             </div>
           </div>
@@ -131,6 +131,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
         >
           <Plus size={10} />
           Floor
+        </button>
+        <button
+          onClick={() => onAddWall('ceiling')}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#005e99]/20 hover:bg-[#005e99]/40 text-[#4ca6ff] text-[9px] uppercase tracking-widest font-black rounded-lg transition-all"
+        >
+          <Plus size={10} />
+          Ceiling
         </button>
       </div>
     </div>
