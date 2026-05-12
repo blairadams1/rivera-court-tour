@@ -41,18 +41,20 @@ const MuralWall: React.FC<MuralWallProps> = ({ config }) => {
   }, [config.imageUrl, config.lowResUrl, gl]);
 
   return (
-    <mesh position={config.position} rotation={config.rotation}>
+    <mesh position={config.position} rotation={config.rotation} renderOrder={100}>
       <planeGeometry args={[config.width, config.height]} />
       {/* 
         Using meshBasicMaterial instead of meshStandardMaterial.
         This makes the material "unlit", so it renders the texture exactly 
         as the original PNG without being affected by scene lights.
+        depthTest disabled so main walls always render on top of placed/interior walls.
       */}
       <meshBasicMaterial 
         map={texture} 
         transparent={config.imageUrl.toLowerCase().endsWith('.png')}
         alphaTest={0.1}
         side={THREE.DoubleSide}
+        depthTest={false}
         color={texture ? "white" : (error ? "#333333" : "#111111")}
       />
     </mesh>
