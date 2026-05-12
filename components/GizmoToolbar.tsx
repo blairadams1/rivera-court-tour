@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
+import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X, Copy } from 'lucide-react';
 import { InteriorWall } from '../types';
 import { ROOM_HEIGHT } from '../constants';
 
@@ -9,6 +9,7 @@ interface GizmoToolbarProps {
   transformMode: 'translate' | 'rotate' | 'scale';
   onTransformModeChange: (mode: 'translate' | 'rotate' | 'scale') => void;
   onOpenEditor: () => void;
+  onClone: () => void;
   onDelete: () => void;
   onDeselect: () => void;
   onPropertyChange: (wall: InteriorWall) => void;
@@ -110,7 +111,7 @@ const Scrubber: React.FC<{
 
 const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
   wall, transformMode, onTransformModeChange,
-  onOpenEditor, onDelete, onDeselect, onPropertyChange
+  onOpenEditor, onClone, onDelete, onDeselect, onPropertyChange
 }) => {
   const [expanded, setExpanded] = useState(false);
 
@@ -281,8 +282,18 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
           <button
             onClick={onOpenEditor}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black text-white/50 hover:text-white hover:bg-white/10 transition-all"
+            title="Edit image & label"
           >
             <Pencil size={12} />
+          </button>
+
+          {/* Clone / Duplicate */}
+          <button
+            onClick={onClone}
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black text-cyan-400/70 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all"
+            title="Duplicate element"
+          >
+            <Copy size={12} />
           </button>
 
           {/* Delete */}

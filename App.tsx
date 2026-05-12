@@ -290,6 +290,16 @@ const App: React.FC = () => {
     setEditingWall(null);
   }, []);
 
+  const handleCloneWall = useCallback(async (wall: InteriorWall) => {
+    const cloned: InteriorWall = {
+      ...wall,
+      id: `iw-${Date.now()}`,
+      label: wall.label ? `${wall.label} copy` : '',
+    };
+    await setDoc(doc(db, 'interiorWalls', cloned.id), cloned);
+    setSelectedWallId(cloned.id);
+  }, []);
+
   const handleEditWall = useCallback((wall: InteriorWall) => {
     setEditingWall(wall);
     setSelectedWallId(null); // close gizmo when opening popup editor
@@ -468,6 +478,7 @@ const App: React.FC = () => {
               setEditingWall(selectedWall);
               setSelectedWallId(null);
             }}
+            onClone={() => handleCloneWall(selectedWall)}
             onDelete={() => {
               handleDeleteWall(selectedWallId);
               setSelectedWallId(null);
