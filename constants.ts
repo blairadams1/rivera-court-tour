@@ -47,8 +47,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: '/EastWall4.png',
-    lowResUrl: '/EastWall4.png',
+    imageUrl: '/EastWallTransparent.png',
+    lowResUrl: '/EastWallTransparent.png',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
