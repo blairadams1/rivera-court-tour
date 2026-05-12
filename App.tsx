@@ -127,7 +127,17 @@ const App: React.FC = () => {
   // Live-sync interior walls from Firestore
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'interiorWalls'), (snapshot) => {
-      const fetched = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as InteriorWall));
+      const fetched = snapshot.docs.map(d => {
+        const data = { ...d.data(), id: d.id } as InteriorWall;
+        // Sanitize rotation: migrate legacy single-number to [x,y,z] and guard against NaN
+        if (!Array.isArray(data.rotation)) {
+          const y = Number.isFinite(Number(data.rotation)) ? Number(data.rotation) : 0;
+          data.rotation = [0, y, 0];
+        } else {
+          data.rotation = data.rotation.map(v => Number.isFinite(Number(v)) ? Number(v) : 0) as [number, number, number];
+        }
+        return data;
+      });
       setInteriorWalls(fetched);
     });
     return () => unsubscribe();
