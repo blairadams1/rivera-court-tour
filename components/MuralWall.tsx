@@ -50,7 +50,9 @@ const MuralWall: React.FC<MuralWallProps> = ({ config }) => {
       */}
       <meshBasicMaterial 
         map={texture} 
-        transparent={false}
+        transparent={config.imageUrl.toLowerCase().endsWith('.png')}
+        alphaTest={0.1}
+        side={THREE.DoubleSide}
         color={texture ? "white" : (error ? "#333333" : "#111111")}
       />
     </mesh>
