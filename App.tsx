@@ -8,7 +8,7 @@ import VirtualJoystick from './components/VirtualJoystick';
 import HotspotInfoPanel from './components/HotspotInfoPanel';
 import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
-import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, MAX_LIFT, COLLISION_BUFFER } from './constants';
+import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, MAX_LIFT, COLLISION_BUFFER } from './constants';
 import { Hotspot, WallSide, InteriorWall } from './types';
 import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
