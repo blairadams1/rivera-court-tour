@@ -149,7 +149,7 @@ const App: React.FC = () => {
     let maxZ = ROOM_DEPTH / 2;
     for (const w of interiorWalls) {
       const halfW = w.scale[0] / 2;
-      const halfH = w.type === 'floor' ? w.scale[1] / 2 : 0;
+      const halfH = (w.type === 'floor' || w.type === 'ceiling') ? w.scale[1] / 2 : 0;
       const yDeg = Array.isArray(w.rotation) ? w.rotation[1] : Number(w.rotation) || 0;
       const rad = (yDeg * Math.PI) / 180;
       const cos = Math.abs(Math.cos(rad));
@@ -260,12 +260,16 @@ const App: React.FC = () => {
   }, [scaffoldHeight]);
 
   // --- Interior Wall CRUD ---
-  const handleAddWall = useCallback(async (type: 'wall' | 'floor') => {
+  const handleAddWall = useCallback(async (type: 'wall' | 'floor' | 'ceiling') => {
+    const defaultPos: [number, number, number] =
+      type === 'floor' ? [0, 0.05, 0] :
+      type === 'ceiling' ? [0, ROOM_HEIGHT - 0.05, 0] :
+      [0, 10, 0];
     const newWall: InteriorWall = {
       id: `iw-${Date.now()}`,
       type,
       imageUrl: '',
-      position: type === 'floor' ? [0, 0.05, 0] : [0, 10, 0],
+      position: defaultPos,
       rotation: [0, 0, 0],
       scale: [10, 10],
       label: ''

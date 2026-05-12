@@ -69,20 +69,22 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
   const yRot = (rot[1] * Math.PI) / 180;
   const zRot = (rot[2] * Math.PI) / 180;
   const isFloor = wall.type === 'floor';
-  const pivotRotation: [number, number, number] = isFloor
-    ? [-Math.PI / 2 + xRot, yRot, zRot]
-    : [xRot, yRot, zRot];
+  const isCeiling = wall.type === 'ceiling';
+  const isHorizontal = isFloor || isCeiling;
+  // Floors face up (-PI/2), ceilings face down (+PI/2)
+  const baseXTilt = isFloor ? -Math.PI / 2 : isCeiling ? Math.PI / 2 : 0;
+  const pivotRotation: [number, number, number] = [baseXTilt + xRot, yRot, zRot];
 
   // Mesh offset: for walls, shift up by 0.5 in local space so the
   // pivot group's origin sits at the bottom edge of the plane.
-  // For floors (horizontal), keep the origin at the center.
-  const meshOffset: [number, number, number] = isFloor ? [0, 0, 0] : [0, 0.5, 0];
+  // For floors/ceilings (horizontal), keep the origin at the center.
+  const meshOffset: [number, number, number] = isHorizontal ? [0, 0, 0] : [0, 0.5, 0];
 
   // ---- Sync pivot transform from props (only when not being gizmo-dragged) ----
   useEffect(() => {
     if (!pivotRef.current || gizmoState.isDragging) return;
     // For walls the pivot sits at the base: center_y − half_height
-    const baseY = isFloor ? wall.position[1] : wall.position[1] - wall.scale[1] / 2;
+    const baseY = isHorizontal ? wall.position[1] : wall.position[1] - wall.scale[1] / 2;
     pivotRef.current.position.set(
       safeNum(wall.position[0]),
       safeNum(baseY),
@@ -90,7 +92,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     );
     // Only set rotation from props when NOT in billboard mode
     // (billboard mode handles rotation in useFrame)
-    if (!wall.billboard || isFloor) {
+    if (!wall.billboard || isHorizontal) {
       pivotRef.current.rotation.set(
         safeNum(pivotRotation[0]),
         safeNum(pivotRotation[1]),
@@ -102,7 +104,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
 
   // ---- Billboard: rotate Y to always face camera ----
   useFrame(() => {
-    if (!pivotRef.current || !wall.billboard || isFloor) return;
+    if (!pivotRef.current || !wall.billboard || isHorizontal) return;
     // Don't override rotation while gizmo is being dragged in rotate mode
     if (gizmoState.isDragging && transformMode === 'rotate') return;
 
@@ -127,7 +129,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
         const pivot = pivotRef.current;
 
         // For walls, convert base Y back to center Y
-        const rawY = isFloor
+        const rawY = isHorizontal
           ? pivot.position.y
           : pivot.position.y + Math.abs(pivot.scale.y) / 2;
 
@@ -142,10 +144,9 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
         let snappedRot: [number, number, number] = Array.isArray(wall.rotation)
           ? [safeNum(wall.rotation[0]), safeNum(wall.rotation[1]), safeNum(wall.rotation[2])]
           : [0, safeNum(wall.rotation), 0];
-        if (!wall.billboard || isFloor) {
-          // For floors, we added -PI/2 to X for the horizontal orientation,
-          // so subtract that base offset back out before storing
-          const baseX = isFloor ? -Math.PI / 2 : 0;
+        if (!wall.billboard || isHorizontal) {
+          // For horizontal planes, subtract the base X tilt before storing
+          const baseX = baseXTilt;
           let xDeg = safeNum(((pivot.rotation.x - baseX) * 180) / Math.PI) % 360;
           let yDeg = safeNum((pivot.rotation.y * 180) / Math.PI) % 360;
           let zDeg = safeNum((pivot.rotation.z * 180) / Math.PI) % 360;

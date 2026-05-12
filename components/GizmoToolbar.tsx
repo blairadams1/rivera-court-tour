@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
 import { InteriorWall } from '../types';
+import { ROOM_HEIGHT } from '../constants';
 
 interface GizmoToolbarProps {
   wall: InteriorWall;
@@ -134,13 +135,16 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
     onPropertyChange({ ...wall, rotation: r });
   }, [wall, onPropertyChange]);
 
-  const updateType = useCallback((type: 'wall' | 'floor') => {
+  const updateType = useCallback((type: 'wall' | 'floor' | 'ceiling') => {
+    const isHorizontal = type === 'floor' || type === 'ceiling';
     onPropertyChange({
       ...wall,
       type,
-      billboard: type === 'floor' ? false : wall.billboard, // disable billboard for floors
+      billboard: isHorizontal ? false : wall.billboard,
       position: type === 'floor'
         ? [wall.position[0], 0.05, wall.position[2]]
+        : type === 'ceiling'
+        ? [wall.position[0], ROOM_HEIGHT - 0.05, wall.position[2]]
         : [wall.position[0], wall.position[1] < 1 ? 10 : wall.position[1], wall.position[2]]
     });
   }, [wall, onPropertyChange]);
@@ -237,10 +241,18 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
             >
               Floor
             </button>
+            <button
+              onClick={() => updateType('ceiling')}
+              className={`px-2.5 py-1.5 text-[9px] uppercase tracking-[0.1em] font-black rounded-md transition-all ${
+                wall.type === 'ceiling' ? 'bg-[#005e99]/60 text-white' : 'text-white/30 hover:text-white/60'
+              }`}
+            >
+              Ceil
+            </button>
           </div>
 
           {/* Billboard / Look-At toggle */}
-          {wall.type !== 'floor' && (
+          {wall.type === 'wall' && (
             <button
               onClick={toggleBillboard}
               className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black transition-all ${
@@ -346,7 +358,7 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
             </div>
 
             {/* Options */}
-            {wall.type !== 'floor' && (
+            {wall.type === 'wall' && (
               <div className="mt-3 pt-3 border-t border-white/5">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${

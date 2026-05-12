@@ -44,11 +44,11 @@ export interface Hotspot {
   gallery?: GalleryImage[];
 }
 
-export type PlacedWallType = 'wall' | 'floor';
+export type PlacedWallType = 'wall' | 'floor' | 'ceiling';
 
 export interface InteriorWall {
   id: string;
-  type: PlacedWallType;       // 'wall' = vertical plane, 'floor' = horizontal plane
+  type: PlacedWallType;       // 'wall' = vertical, 'floor' = horizontal at ground, 'ceiling' = horizontal at top
   imageUrl: string;            // Firebase Storage download URL
   position: [number, number, number]; // world XYZ center
   rotation: [number, number, number]; // [X, Y, Z] rotation in degrees
