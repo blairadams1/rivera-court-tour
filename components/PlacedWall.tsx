@@ -204,6 +204,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
         {/* Main mesh — offset upward so pivot origin is at the base */}
         <mesh
           position={meshOffset}
+          renderOrder={wall.renderOrder || 0}
           onClick={(e) => {
             if (isAdminMode) {
               e.stopPropagation();
@@ -218,7 +219,8 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
               side={THREE.DoubleSide}
               transparent={true}
               alphaTest={hasAlpha ? 0.05 : 0}
-              depthWrite={!hasAlpha}
+              depthWrite={!hasAlpha && !(wall.renderOrder && wall.renderOrder > 0)}
+              depthTest={!(wall.renderOrder && wall.renderOrder > 0)}
               toneMapped={false}
               color="#ffffff"
             />

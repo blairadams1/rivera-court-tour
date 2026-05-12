@@ -55,4 +55,5 @@ export interface InteriorWall {
   scale: [number, number];     // [width, height] in feet-units
   label: string;               // admin-only label
   billboard?: boolean;         // if true, plane always faces camera (Y-axis only)
+  renderOrder?: number;        // draw order for overlapping panels (higher = on top)
 }
