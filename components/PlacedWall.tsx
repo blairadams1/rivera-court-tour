@@ -133,11 +133,15 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
           ? pivot.position.y
           : pivot.position.y + Math.abs(pivot.scale.y) / 2;
 
-        // Position: snap to 0.5 unit grid
+        // Position
+        const precise = gizmoState.precisionMode;
+        const snapPos = (v: number) => precise
+          ? Math.round(safeNum(v) * 100) / 100
+          : Math.round(safeNum(v) * 2) / 2;
         const pos: [number, number, number] = [
-          Math.round(safeNum(pivot.position.x) * 2) / 2,
-          Math.round(safeNum(rawY) * 2) / 2,
-          Math.round(safeNum(pivot.position.z) * 2) / 2
+          snapPos(pivot.position.x),
+          snapPos(rawY),
+          snapPos(pivot.position.z)
         ];
 
         // Rotation: extract all three axes in degrees
@@ -153,13 +157,17 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
           if (xDeg < 0) xDeg += 360;
           if (yDeg < 0) yDeg += 360;
           if (zDeg < 0) zDeg += 360;
-          snappedRot = [Math.round(xDeg), Math.round(yDeg), Math.round(zDeg)];
+          const snapRot = (v: number) => precise ? Math.round(v * 10) / 10 : Math.round(v);
+          snappedRot = [snapRot(xDeg), snapRot(yDeg), snapRot(zDeg)];
         }
 
-        // Scale: read and round to 0.5
+        // Scale: read and round
+        const snapScale = (v: number) => precise
+          ? Math.max(0.1, Math.round(Math.abs(safeNum(v, 1)) * 100) / 100)
+          : Math.max(0.5, Math.round(Math.abs(safeNum(v, 1)) * 2) / 2);
         const newScale: [number, number] = [
-          Math.max(0.5, Math.round(Math.abs(safeNum(pivot.scale.x, 1)) * 2) / 2),
-          Math.max(0.5, Math.round(Math.abs(safeNum(pivot.scale.y, 1)) * 2) / 2)
+          snapScale(pivot.scale.x),
+          snapScale(pivot.scale.y)
         ];
 
         onTransformEnd({
@@ -192,8 +200,8 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
           ref={transformRef}
           object={pivotRef.current}
           mode={transformMode}
-          rotationSnap={Math.PI / 12}
-          translationSnap={0.5}
+          rotationSnap={gizmoState.precisionMode ? null : Math.PI / 12}
+          translationSnap={gizmoState.precisionMode ? null : 0.5}
           size={0.8}
           {...axisVisibility}
         />
