@@ -54,9 +54,17 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     setPivotMounted(!!node);
   }, []);
 
+  // ---- Safe number helper (prevents NaN from crashing the scene) ----
+  const safeNum = (v: unknown, fallback = 0): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
   // ---- Compute rotation ----
   // Migrate legacy single-number (Y-only) rotation to [x, y, z] tuple
-  const rot = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation, 0];
+  const rot = Array.isArray(wall.rotation)
+    ? [safeNum(wall.rotation[0]), safeNum(wall.rotation[1]), safeNum(wall.rotation[2])]
+    : [0, safeNum(wall.rotation), 0];
   const xRot = (rot[0] * Math.PI) / 180;
   const yRot = (rot[1] * Math.PI) / 180;
   const zRot = (rot[2] * Math.PI) / 180;
@@ -75,13 +83,21 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     if (!pivotRef.current || gizmoState.isDragging) return;
     // For walls the pivot sits at the base: center_y − half_height
     const baseY = isFloor ? wall.position[1] : wall.position[1] - wall.scale[1] / 2;
-    pivotRef.current.position.set(wall.position[0], baseY, wall.position[2]);
+    pivotRef.current.position.set(
+      safeNum(wall.position[0]),
+      safeNum(baseY),
+      safeNum(wall.position[2])
+    );
     // Only set rotation from props when NOT in billboard mode
     // (billboard mode handles rotation in useFrame)
     if (!wall.billboard || isFloor) {
-      pivotRef.current.rotation.set(pivotRotation[0], pivotRotation[1], pivotRotation[2]);
+      pivotRef.current.rotation.set(
+        safeNum(pivotRotation[0]),
+        safeNum(pivotRotation[1]),
+        safeNum(pivotRotation[2])
+      );
     }
-    pivotRef.current.scale.set(wall.scale[0], wall.scale[1], 1);
+    pivotRef.current.scale.set(safeNum(wall.scale[0], 1), safeNum(wall.scale[1], 1), 1);
   }, [wall.position, wall.rotation, wall.scale, wall.type, wall.billboard, pivotMounted]);
 
   // ---- Billboard: rotate Y to always face camera ----
@@ -96,7 +112,7 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     const dz = camera.position.z - pivot.position.z;
     const angle = Math.atan2(dx, dz); // Y rotation to face camera
 
-    pivot.rotation.set(0, angle, 0);
+    pivot.rotation.set(0, safeNum(angle), 0);
   });
 
   // ---- TransformControls dragging-changed listener ----
@@ -117,20 +133,22 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
 
         // Position: snap to 0.5 unit grid
         const pos: [number, number, number] = [
-          Math.round(pivot.position.x * 2) / 2,
-          Math.round(rawY * 2) / 2,
-          Math.round(pivot.position.z * 2) / 2
+          Math.round(safeNum(pivot.position.x) * 2) / 2,
+          Math.round(safeNum(rawY) * 2) / 2,
+          Math.round(safeNum(pivot.position.z) * 2) / 2
         ];
 
         // Rotation: extract all three axes in degrees
-        let snappedRot: [number, number, number] = Array.isArray(wall.rotation) ? [...wall.rotation] : [0, wall.rotation, 0];
+        let snappedRot: [number, number, number] = Array.isArray(wall.rotation)
+          ? [safeNum(wall.rotation[0]), safeNum(wall.rotation[1]), safeNum(wall.rotation[2])]
+          : [0, safeNum(wall.rotation), 0];
         if (!wall.billboard || isFloor) {
           // For floors, we added -PI/2 to X for the horizontal orientation,
           // so subtract that base offset back out before storing
           const baseX = isFloor ? -Math.PI / 2 : 0;
-          let xDeg = (((pivot.rotation.x - baseX) * 180) / Math.PI) % 360;
-          let yDeg = ((pivot.rotation.y * 180) / Math.PI) % 360;
-          let zDeg = ((pivot.rotation.z * 180) / Math.PI) % 360;
+          let xDeg = safeNum(((pivot.rotation.x - baseX) * 180) / Math.PI) % 360;
+          let yDeg = safeNum((pivot.rotation.y * 180) / Math.PI) % 360;
+          let zDeg = safeNum((pivot.rotation.z * 180) / Math.PI) % 360;
           if (xDeg < 0) xDeg += 360;
           if (yDeg < 0) yDeg += 360;
           if (zDeg < 0) zDeg += 360;
@@ -139,8 +157,8 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
 
         // Scale: read and round to 0.5
         const newScale: [number, number] = [
-          Math.max(0.5, Math.round(Math.abs(pivot.scale.x) * 2) / 2),
-          Math.max(0.5, Math.round(Math.abs(pivot.scale.y) * 2) / 2)
+          Math.max(0.5, Math.round(Math.abs(safeNum(pivot.scale.x, 1)) * 2) / 2),
+          Math.max(0.5, Math.round(Math.abs(safeNum(pivot.scale.y, 1)) * 2) / 2)
         ];
 
         onTransformEnd({
