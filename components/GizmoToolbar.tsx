@@ -123,6 +123,13 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
     gizmoState.precisionMode = next;
   }, [precisionMode]);
 
+  const [snapEdges, setSnapEdges] = useState(gizmoState.snapEdges);
+  const toggleSnapEdges = useCallback(() => {
+    const next = !snapEdges;
+    setSnapEdges(next);
+    gizmoState.snapEdges = next;
+  }, [snapEdges]);
+
   // Show the properties section relevant to current transform mode
   const modeLabel = transformMode === 'translate' ? 'Position' : transformMode === 'rotate' ? 'Rotation' : 'Scale';
 
@@ -424,7 +431,7 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
           </div>
         )}
 
-        {/* Precision toggle + hint */}
+        {/* Toggles row */}
         <div className="flex items-center justify-center gap-3 mt-1.5">
           <label className="flex items-center gap-1.5 cursor-pointer group" onClick={togglePrecision}>
             <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
@@ -439,6 +446,20 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
             <span className={`text-[9px] uppercase tracking-widest font-black transition-colors ${
               precisionMode ? 'text-[#f59f00]' : 'text-white/25 group-hover:text-white/40'
             }`}>Precision</span>
+          </label>
+          <label className="flex items-center gap-1.5 cursor-pointer group" onClick={toggleSnapEdges}>
+            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+              snapEdges
+                ? 'bg-[#20c997] border-[#20c997]'
+                : 'border-white/20 group-hover:border-white/40'
+            }`}>
+              {snapEdges && (
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              )}
+            </div>
+            <span className={`text-[9px] uppercase tracking-widest font-black transition-colors ${
+              snapEdges ? 'text-[#20c997]' : 'text-white/25 group-hover:text-white/40'
+            }`}>Snap Edges</span>
           </label>
           <span className="text-[9px] text-white/20 tracking-widest uppercase">ESC · G · R · S</span>
         </div>

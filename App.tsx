@@ -14,6 +14,76 @@ import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import GizmoToolbar from './components/GizmoToolbar';
+import { gizmoState } from './components/gizmoState';
+
+// ---- Edge-snap utilities ----
+/** Compute the 4 edge midpoints of a panel in world space */
+function computeEdgeMidpoints(w: InteriorWall): [number, number, number][] {
+  const [cx, cy, cz] = w.position;
+  const [width, height] = w.scale;
+  const rotArr = Array.isArray(w.rotation) ? w.rotation : [0, Number(w.rotation) || 0, 0];
+  const yRad = (rotArr[1] * Math.PI) / 180;
+  const cosY = Math.cos(yRad);
+  const sinY = Math.sin(yRad);
+  const isHoriz = w.type === 'floor' || w.type === 'ceiling';
+
+  // Left/right edges (along local X axis, rotated by Y)
+  const edges: [number, number, number][] = [
+    [cx - (width / 2) * cosY, cy, cz + (width / 2) * sinY],   // left
+    [cx + (width / 2) * cosY, cy, cz - (width / 2) * sinY],   // right
+  ];
+
+  if (isHoriz) {
+    // Horizontal panels: front/back edges along the depth direction (local Z after X-tilt)
+    edges.push(
+      [cx + (height / 2) * sinY, cy, cz + (height / 2) * cosY],  // front
+      [cx - (height / 2) * sinY, cy, cz - (height / 2) * cosY],  // back
+    );
+  } else {
+    // Vertical walls: top/bottom edges (Y doesn't change with Y-rotation)
+    edges.push(
+      [cx, cy + height / 2, cz],  // top
+      [cx, cy - height / 2, cz],  // bottom
+    );
+  }
+  return edges;
+}
+
+/** Snap a moved wall to the nearest edge of any other wall (within threshold) */
+function snapToNearestEdge(moved: InteriorWall, allWalls: InteriorWall[], threshold = 3): InteriorWall {
+  const movedEdges = computeEdgeMidpoints(moved);
+  let bestDist = threshold;
+  let bestOffset: [number, number, number] = [0, 0, 0];
+
+  for (const other of allWalls) {
+    if (other.id === moved.id) continue;
+    const otherEdges = computeEdgeMidpoints(other);
+    for (const me of movedEdges) {
+      for (const oe of otherEdges) {
+        const dx = oe[0] - me[0];
+        const dy = oe[1] - me[1];
+        const dz = oe[2] - me[2];
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestOffset = [dx, dy, dz];
+        }
+      }
+    }
+  }
+
+  if (bestDist < threshold) {
+    return {
+      ...moved,
+      position: [
+        moved.position[0] + bestOffset[0],
+        moved.position[1] + bestOffset[1],
+        moved.position[2] + bestOffset[2],
+      ],
+    };
+  }
+  return moved;
+}
 
 const INITIAL_HOTSPOTS: Hotspot[] = [
   {
@@ -314,8 +384,13 @@ const App: React.FC = () => {
   }, [isAdminMode]);
 
   const handleWallTransformEnd = useCallback(async (wall: InteriorWall) => {
-    await setDoc(doc(db, 'interiorWalls', wall.id), wall);
-  }, []);
+    const final = gizmoState.snapEdges ? snapToNearestEdge(wall, interiorWalls) : wall;
+    if (final !== wall) {
+      // Update local state so the panel visually snaps
+      setInteriorWalls(prev => prev.map(w => w.id === final.id ? final : w));
+    }
+    await setDoc(doc(db, 'interiorWalls', final.id), final);
+  }, [interiorWalls]);
 
   // Handle inline property changes from GizmoToolbar scrubbers
   const handleGizmoPropertyChange = useCallback(async (wall: InteriorWall) => {
