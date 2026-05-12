@@ -368,6 +368,23 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
               </div>
             </div>
 
+            {/* Render Order */}
+            <div className="mt-3 pt-3 border-t border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="text-[8px] uppercase tracking-widest text-white/30 font-black">Draw Order</div>
+                <Scrubber
+                  label="▲"
+                  value={wall.renderOrder || 0}
+                  step={1}
+                  min={0}
+                  max={10}
+                  color="#f59f00"
+                  onChange={v => onPropertyChange({ ...wall, renderOrder: v })}
+                />
+                <span className="text-[8px] text-white/20">higher = on top</span>
+              </div>
+            </div>
+
             {/* Options */}
             {wall.type === 'wall' && (
               <div className="mt-3 pt-3 border-t border-white/5">
