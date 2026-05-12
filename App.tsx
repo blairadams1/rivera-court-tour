@@ -517,7 +517,7 @@ const App: React.FC = () => {
       )}
 
       {showOverlay && (
-        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center backdrop-blur-md" onClick={() => setShowOverlay(false)}>
+        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center backdrop-blur-md" onClick={() => requestAnimationFrame(() => setShowOverlay(false))}>
           <div className="max-w-2xl w-full text-center px-6 py-10 md:px-12 md:py-12 bg-transparent animate-in zoom-in-95 duration-500 flex flex-col items-center justify-center min-h-[100dvh]">
             <img src={DIA_LOGO_URL} alt="DIA Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-5 md:mb-8 shadow-2xl border-2 border-white/20 rounded-full object-cover flex-shrink-0" />
             <div className="flex items-baseline justify-center gap-3 mb-4 md:mb-8">
@@ -567,7 +567,7 @@ const App: React.FC = () => {
                 <div className="text-white/80 text-[11px]">TAP CIRCLES</div>
               </div>
             </div>
-            <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => setShowOverlay(false)}>ENTER THE COURT</button>
+            <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => requestAnimationFrame(() => setShowOverlay(false))}>ENTER THE COURT</button>
           </div>
         </div>
       )}
