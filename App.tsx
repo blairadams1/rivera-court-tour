@@ -255,7 +255,7 @@ const App: React.FC = () => {
       type,
       imageUrl: '',
       position: type === 'floor' ? [0, 0.05, 0] : [0, 10, 0],
-      rotation: 0,
+      rotation: [0, 0, 0],
       scale: [10, 10],
       label: ''
     };

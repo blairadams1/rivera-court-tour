@@ -51,7 +51,7 @@ export interface InteriorWall {
   type: PlacedWallType;       // 'wall' = vertical plane, 'floor' = horizontal plane
   imageUrl: string;            // Firebase Storage download URL
   position: [number, number, number]; // world XYZ center
-  rotation: number;            // Y-axis rotation: 0, 90, 180, or 270 degrees
+  rotation: [number, number, number]; // [X, Y, Z] rotation in degrees
   scale: [number, number];     // [width, height] in feet-units
   label: string;               // admin-only label
   billboard?: boolean;         // if true, plane always faces camera (Y-axis only)

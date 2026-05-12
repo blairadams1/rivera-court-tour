@@ -128,8 +128,10 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
     onPropertyChange({ ...wall, scale: s });
   }, [wall, onPropertyChange]);
 
-  const updateRotation = useCallback((val: number) => {
-    onPropertyChange({ ...wall, rotation: ((val % 360) + 360) % 360 });
+  const updateRotation = useCallback((axis: 0 | 1 | 2, val: number) => {
+    const r: [number, number, number] = Array.isArray(wall.rotation) ? [...wall.rotation] : [0, wall.rotation as number, 0];
+    r[axis] = ((val % 360) + 360) % 360;
+    onPropertyChange({ ...wall, rotation: r });
   }, [wall, onPropertyChange]);
 
   const updateType = useCallback((type: 'wall' | 'floor') => {
@@ -196,9 +198,16 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
                 <Scrubber label="Z" value={wall.position[2]} step={0.5} color="#339af0" onChange={v => updatePosition(2, v)} />
               </>
             )}
-            {transformMode === 'rotate' && (
-              <Scrubber label="Y°" value={wall.rotation} step={1} min={0} max={359} color="#ffd43b" onChange={updateRotation} />
-            )}
+            {transformMode === 'rotate' && (() => {
+              const r = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation as number, 0];
+              return (
+                <>
+                  <Scrubber label="X°" value={r[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
+                  <Scrubber label="Y°" value={r[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
+                  <Scrubber label="Z°" value={r[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
+                </>
+              );
+            })()}
             {transformMode === 'scale' && (
               <>
                 <Scrubber label="W" value={wall.scale[0]} step={0.5} min={1} max={60} color="#ff6b6b" onChange={v => updateScale(0, v)} />
@@ -300,14 +309,23 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
               <div>
                 <div className="text-[8px] uppercase tracking-widest text-white/30 font-black mb-2">Rotation</div>
                 <div className="flex gap-2 items-end">
-                  <Scrubber label="Y°" value={wall.rotation} step={1} min={0} max={359} color="#ffd43b" onChange={updateRotation} />
+                  {(() => {
+                    const r = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation as number, 0];
+                    return (
+                      <>
+                        <Scrubber label="X°" value={r[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
+                        <Scrubber label="Y°" value={r[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
+                        <Scrubber label="Z°" value={r[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
+                      </>
+                    );
+                  })()}
                   <div className="flex gap-1 pb-0.5">
                     {[0, 90, 180, 270].map(deg => (
                       <button
                         key={deg}
-                        onClick={() => updateRotation(deg)}
+                        onClick={() => updateRotation(1, deg)}
                         className={`w-7 h-5 text-[8px] font-mono rounded transition-all ${
-                          wall.rotation === deg ? 'bg-[#005e99]/60 text-white' : 'bg-white/5 text-white/30 hover:text-white/60'
+                          (Array.isArray(wall.rotation) ? wall.rotation[1] : wall.rotation) === deg ? 'bg-[#005e99]/60 text-white' : 'bg-white/5 text-white/30 hover:text-white/60'
                         }`}
                       >
                         {deg}
