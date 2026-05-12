@@ -150,7 +150,8 @@ const App: React.FC = () => {
     for (const w of interiorWalls) {
       const halfW = w.scale[0] / 2;
       const halfH = w.type === 'floor' ? w.scale[1] / 2 : 0;
-      const rad = (w.rotation * Math.PI) / 180;
+      const yDeg = Array.isArray(w.rotation) ? w.rotation[1] : Number(w.rotation) || 0;
+      const rad = (yDeg * Math.PI) / 180;
       const cos = Math.abs(Math.cos(rad));
       const sin = Math.abs(Math.sin(rad));
       const extentX = halfW * cos + halfH * sin;
