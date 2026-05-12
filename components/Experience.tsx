@@ -9,6 +9,7 @@ import Controls from './Controls';
 import CameraTracker from './CameraTracker';
 import { WALLS, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, FLOOR_IMAGE_URL, CEILING_IMAGE_URL } from '../constants';
 import { Hotspot as HotspotType, WallSide, InteriorWall } from '../types';
+import { gizmoState } from './gizmoState';
 
 interface ExperienceProps {
   scaffoldHeight: number;
@@ -82,13 +83,13 @@ const Experience: React.FC<ExperienceProps> = ({
         <group 
           key={i} 
           onClick={(e) => {
-            if (isAdminMode && !draggingHotspotId) {
+            if (isAdminMode && !draggingHotspotId && !gizmoState.hotspotLocked) {
               e.stopPropagation();
               onWallClick([e.point.x, e.point.y, e.point.z], wall.side);
             }
           }}
           onPointerMove={(e) => {
-            if (isAdminMode && draggingHotspotId) {
+            if (isAdminMode && draggingHotspotId && !gizmoState.hotspotLocked) {
               e.stopPropagation();
               const hotspot = hotspots.find(h => h.id === draggingHotspotId);
               if (hotspot && hotspot.wallSide === wall.side) {
@@ -107,7 +108,7 @@ const Experience: React.FC<ExperienceProps> = ({
             }
           }}
           onPointerUp={(e) => {
-            if (isAdminMode && draggingHotspotId) {
+            if (isAdminMode && draggingHotspotId && !gizmoState.hotspotLocked) {
               e.stopPropagation();
               setDraggingHotspotId(null);
             }
@@ -147,13 +148,13 @@ const Experience: React.FC<ExperienceProps> = ({
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, -0.05, 0]}
         onClick={(e) => {
-          if (isAdminMode && !draggingHotspotId) {
+          if (isAdminMode && !draggingHotspotId && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             onWallClick([e.point.x, e.point.y, e.point.z], WallSide.FLOOR);
           }
         }}
         onPointerMove={(e) => {
-          if (isAdminMode && draggingHotspotId) {
+          if (isAdminMode && draggingHotspotId && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             const hotspot = hotspots.find(h => h.id === draggingHotspotId);
             if (hotspot && hotspot.wallSide === WallSide.FLOOR) {
@@ -162,7 +163,7 @@ const Experience: React.FC<ExperienceProps> = ({
           }
         }}
         onPointerUp={(e) => {
-          if (isAdminMode && draggingHotspotId) {
+          if (isAdminMode && draggingHotspotId && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             setDraggingHotspotId(null);
           }

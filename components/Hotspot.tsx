@@ -3,6 +3,7 @@ import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Hotspot as HotspotType, WallSide } from '../types';
+import { gizmoState } from './gizmoState';
 
 interface HotspotProps {
   data: HotspotType;
@@ -73,22 +74,26 @@ const Hotspot: React.FC<HotspotProps> = ({
       <mesh 
         ref={innerRingRef}
         onPointerDown={(e) => {
-          if (isAdminMode) {
+          if (isAdminMode && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             onDragStart?.();
           }
         }}
         onPointerUp={(e) => {
-          if (isAdminMode) {
+          if (isAdminMode && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             onDragEnd?.();
           }
         }}
         onClick={(e) => {
+          if (isAdminMode && gizmoState.hotspotLocked) return;
           e.stopPropagation();
           onClick(data);
         }}
-        onPointerOver={() => (document.body.style.cursor = isAdminMode ? 'move' : 'pointer')}
+        onPointerOver={() => {
+          if (isAdminMode && gizmoState.hotspotLocked) return;
+          document.body.style.cursor = isAdminMode ? 'move' : 'pointer';
+        }}
         onPointerOut={() => (document.body.style.cursor = 'default')}
       >
         <ringGeometry args={[0.45, 0.6, 48]} />
@@ -113,18 +118,19 @@ const Hotspot: React.FC<HotspotProps> = ({
       <mesh 
         visible={false} 
         onPointerDown={(e) => {
-          if (isAdminMode) {
+          if (isAdminMode && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             onDragStart?.();
           }
         }}
         onPointerUp={(e) => {
-          if (isAdminMode) {
+          if (isAdminMode && !gizmoState.hotspotLocked) {
             e.stopPropagation();
             onDragEnd?.();
           }
         }}
         onClick={(e) => {
+          if (isAdminMode && gizmoState.hotspotLocked) return;
           e.stopPropagation();
           onClick(data);
         }}
