@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X, Copy } from 'lucide-react';
 import { InteriorWall } from '../types';
 import { ROOM_HEIGHT } from '../constants';
+import { gizmoState } from './gizmoState';
 
 interface GizmoToolbarProps {
   wall: InteriorWall;
@@ -114,6 +115,13 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
   onOpenEditor, onClone, onDelete, onDeselect, onPropertyChange
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [precisionMode, setPrecisionMode] = useState(gizmoState.precisionMode);
+
+  const togglePrecision = useCallback(() => {
+    const next = !precisionMode;
+    setPrecisionMode(next);
+    gizmoState.precisionMode = next;
+  }, [precisionMode]);
 
   // Show the properties section relevant to current transform mode
   const modeLabel = transformMode === 'translate' ? 'Position' : transformMode === 'rotate' ? 'Rotation' : 'Scale';
@@ -416,10 +424,24 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
           </div>
         )}
 
-        {/* Hint */}
-        <p className="text-center text-[9px] text-white/25 mt-1.5 tracking-widest uppercase">
-          ESC deselect · G move · R rotate · S scale
-        </p>
+        {/* Precision toggle + hint */}
+        <div className="flex items-center justify-center gap-3 mt-1.5">
+          <label className="flex items-center gap-1.5 cursor-pointer group" onClick={togglePrecision}>
+            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
+              precisionMode
+                ? 'bg-[#f59f00] border-[#f59f00]'
+                : 'border-white/20 group-hover:border-white/40'
+            }`}>
+              {precisionMode && (
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              )}
+            </div>
+            <span className={`text-[9px] uppercase tracking-widest font-black transition-colors ${
+              precisionMode ? 'text-[#f59f00]' : 'text-white/25 group-hover:text-white/40'
+            }`}>Precision</span>
+          </label>
+          <span className="text-[9px] text-white/20 tracking-widest uppercase">ESC · G · R · S</span>
+        </div>
       </div>
     </div>
   );
