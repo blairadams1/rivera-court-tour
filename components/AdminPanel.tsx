@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Hotspot, MediaType, GalleryImage, InteriorWall } from '../types';
 import { AdminGalleryEditor } from './AdminGalleryEditor';
 import AdminWallEditor from './AdminWallEditor';
@@ -31,11 +31,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 }) => {
   const [formData, setFormData] = useState<Partial<Hotspot>>({ title: '', description: '', mediaType: 'none', mediaUrl: '', gallery: [] });
   const [hotspotLocked, setHotspotLocked] = useState(gizmoState.hotspotLocked);
+  const [renamingWallId, setRenamingWallId] = useState<string | null>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingHotspot) setFormData(editingHotspot);
     else setFormData({ title: '', description: '', mediaType: 'none', mediaUrl: '', gallery: [] });
   }, [editingHotspot]);
+
+  // Auto-select rename input text
+  useEffect(() => {
+    if (renamingWallId && renameInputRef.current) {
+      renameInputRef.current.select();
+    }
+  }, [renamingWallId]);
 
   // If editing an interior wall, show that editor instead
   if (editingWall) {
@@ -121,11 +130,45 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <span className={`truncate block font-medium ${
-                selectedWallId === w.id ? 'text-white' : 'text-white/60 group-hover:text-white'
-              }`}>
-                {w.label || `${w.type === 'floor' ? 'Floor' : w.type === 'ceiling' ? 'Ceiling' : 'Wall'} ${w.id.slice(-4)}`}
-              </span>
+              {renamingWallId === w.id ? (
+                <input
+                  ref={renameInputRef}
+                  className="w-full bg-black/60 border border-[#005e99]/60 rounded px-1.5 py-0.5 text-[10px] text-white outline-none focus:border-[#005e99] font-medium"
+                  defaultValue={w.label || `${w.type === 'floor' ? 'Floor' : w.type === 'ceiling' ? 'Ceiling' : 'Wall'} ${w.id.slice(-4)}`}
+                  onClick={e => e.stopPropagation()}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const newLabel = (e.target as HTMLInputElement).value.trim();
+                      onSaveWall({ ...w, label: newLabel });
+                      setRenamingWallId(null);
+                    }
+                    if (e.key === 'Escape') {
+                      setRenamingWallId(null);
+                    }
+                  }}
+                  onBlur={e => {
+                    const newLabel = e.target.value.trim();
+                    if (newLabel !== w.label) {
+                      onSaveWall({ ...w, label: newLabel });
+                    }
+                    setRenamingWallId(null);
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className={`truncate block font-medium ${
+                    selectedWallId === w.id ? 'text-white' : 'text-white/60 group-hover:text-white'
+                  }`}
+                  onDoubleClick={e => {
+                    e.stopPropagation();
+                    setRenamingWallId(w.id);
+                  }}
+                  title="Double-click to rename"
+                >
+                  {w.label || `${w.type === 'floor' ? 'Floor' : w.type === 'ceiling' ? 'Ceiling' : 'Wall'} ${w.id.slice(-4)}`}
+                </span>
+              )}
               <span className="text-[8px] text-white/30 font-mono">
                 {w.scale[0]}×{w.scale[1]}ft · {Array.isArray(w.rotation) ? `${w.rotation[1]}°` : `${w.rotation}°`}
               </span>
