@@ -248,11 +248,19 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     // Enforce minimum camera height of 6 feet at all times
     camera.position.y = Math.max(camera.position.y, MIN_CAM_HEIGHT);
 
-    // Always clamp to the base room dimensions to keep the user inside the main room
-    const clampHalfWidth = ROOM_WIDTH / 2 - COLLISION_BUFFER;
-    const clampHalfDepth = ROOM_DEPTH / 2 - COLLISION_BUFFER;
-    camera.position.x = Math.max(-clampHalfWidth, Math.min(clampHalfWidth, camera.position.x));
-    camera.position.z = Math.max(-clampHalfDepth, Math.min(clampHalfDepth, camera.position.z));
+    // Per-side collision buffers (east wall gets a larger buffer)
+    const EAST_BUFFER = 20.0;   // positive X side
+    const WEST_BUFFER = 10.0;    // negative X side
+    const NORTH_BUFFER = 10.0;   // negative Z side
+    const SOUTH_BUFFER = 10.0;   // positive Z side
+
+    const maxX = ROOM_WIDTH / 2 - EAST_BUFFER;
+    const minX = -(ROOM_WIDTH / 2 - WEST_BUFFER);
+    const maxZ = ROOM_DEPTH / 2 - SOUTH_BUFFER;
+    const minZ = -(ROOM_DEPTH / 2 - NORTH_BUFFER);
+
+    camera.position.x = Math.max(minX, Math.min(maxX, camera.position.x));
+    camera.position.z = Math.max(minZ, Math.min(maxZ, camera.position.z));
   });
 
   return null;

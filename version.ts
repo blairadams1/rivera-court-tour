@@ -1,2 +1,2 @@
 export const VERSION = 'v0.1';
-export const BUILD_NUMBER = 86;
+export const BUILD_NUMBER = 87;
