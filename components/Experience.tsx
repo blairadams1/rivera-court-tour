@@ -200,7 +200,6 @@ const Experience: React.FC<ExperienceProps> = ({
         teleportTarget={teleportTarget} 
         isSidebarOpen={isSidebarOpen} 
         onNavigate={onNavigate}
-        effectiveBounds={effectiveBounds}
       />
       <CameraTracker />
       <Environment preset="studio" />

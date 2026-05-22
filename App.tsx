@@ -602,9 +602,58 @@ const App: React.FC = () => {
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D.</p>
             {/* Desktop instructions */}
             <div className="hidden md:flex flex-wrap justify-center gap-14 mb-10 font-mono text-[19px]">
-              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">MOVE</div><div className="text-white">← → ↑ ↓</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">VIEW</div><div className="text-white">DRAG MOUSE</div></div>
-              <div className="text-center"><div className="text-[#005e99] mb-3 font-black text-[21px]">DETAIL</div><div className="text-white">TAP THE CIRCLES</div></div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-3 font-black text-[21px]">MOVE</div>
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-2">
+                  {/* Up arrow key */}
+                  <rect x="16" y="2" width="16" height="14" rx="3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(0,94,153,0.15)"/>
+                  <path d="M24 6 L24 12" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M21 9 L24 6 L27 9" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Left arrow key */}
+                  <rect x="0" y="18" width="14" height="14" rx="3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(0,94,153,0.15)"/>
+                  <path d="M4 25 L10 25" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M7 22 L4 25 L7 28" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Down arrow key */}
+                  <rect x="16" y="18" width="16" height="14" rx="3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(0,94,153,0.15)"/>
+                  <path d="M24 22 L24 28" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M21 25 L24 28 L27 25" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* Right arrow key */}
+                  <rect x="34" y="18" width="14" height="14" rx="3" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(0,94,153,0.15)"/>
+                  <path d="M38 25 L44 25" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M41 22 L44 25 L41 28" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div className="text-white/80 text-[13px]">ARROW KEYS</div>
+              </div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-3 font-black text-[21px]">VIEW</div>
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-2">
+                  {/* Mouse body */}
+                  <rect x="12" y="6" width="24" height="36" rx="12" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="rgba(0,94,153,0.15)"/>
+                  {/* Center divider */}
+                  <line x1="24" y1="6" x2="24" y2="22" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+                  {/* Scroll wheel */}
+                  <rect x="22" y="12" width="4" height="7" rx="2" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" fill="none"/>
+                  {/* Drag arrows */}
+                  <path d="M6 24 L12 24" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M9 21 L6 24 L9 27" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M42 24 L36 24" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M39 21 L42 24 L39 27" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div className="text-white/80 text-[13px]">CLICK + DRAG</div>
+              </div>
+              <div className="text-center flex flex-col items-center">
+                <div className="text-[#005e99] mb-3 font-black text-[21px]">DETAIL</div>
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-2">
+                  {/* Outer ring */}
+                  <circle cx="24" cy="24" r="16" stroke="#005e99" strokeWidth="2" fill="rgba(0,94,153,0.2)"/>
+                  {/* Inner dot */}
+                  <circle cx="24" cy="24" r="6" fill="white" opacity="0.7"/>
+                  {/* Pulse rings */}
+                  <circle cx="24" cy="24" r="20" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none"/>
+                  <circle cx="24" cy="24" r="11" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none"/>
+                </svg>
+                <div className="text-white/80 text-[13px]">CLICK CIRCLES</div>
+              </div>
             </div>
             {/* Mobile instructions */}
             <div className="flex md:hidden flex-wrap justify-center gap-6 mb-6 font-mono text-[14px]">

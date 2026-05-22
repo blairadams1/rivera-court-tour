@@ -13,10 +13,10 @@ interface ControlsProps {
   teleportTarget?: [number, number, number] | null;
   isSidebarOpen?: boolean;
   onNavigate?: () => void;
-  effectiveBounds?: { halfWidth: number; halfDepth: number };
+
 }
 
-const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarget, isSidebarOpen, onNavigate, effectiveBounds }) => {
+const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarget, isSidebarOpen, onNavigate }) => {
   const { camera, gl } = useThree();
   const keys = useRef<{ [key: string]: boolean }>({});
   const isDragging = useRef(false);
@@ -248,10 +248,11 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     // Enforce minimum camera height of 6 feet at all times
     camera.position.y = Math.max(camera.position.y, MIN_CAM_HEIGHT);
 
-    const halfWidth = (effectiveBounds?.halfWidth ?? ROOM_WIDTH / 2) - COLLISION_BUFFER;
-    const halfDepth = (effectiveBounds?.halfDepth ?? ROOM_DEPTH / 2) - COLLISION_BUFFER;
-    camera.position.x = Math.max(-halfWidth, Math.min(halfWidth, camera.position.x));
-    camera.position.z = Math.max(-halfDepth, Math.min(halfDepth, camera.position.z));
+    // Always clamp to the base room dimensions to keep the user inside the main room
+    const clampHalfWidth = ROOM_WIDTH / 2 - COLLISION_BUFFER;
+    const clampHalfDepth = ROOM_DEPTH / 2 - COLLISION_BUFFER;
+    camera.position.x = Math.max(-clampHalfWidth, Math.min(clampHalfWidth, camera.position.x));
+    camera.position.z = Math.max(-clampHalfDepth, Math.min(clampHalfDepth, camera.position.z));
   });
 
   return null;
