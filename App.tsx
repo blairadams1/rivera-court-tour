@@ -15,6 +15,8 @@ import { VERSION, BUILD_NUMBER } from './version';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import GizmoToolbar from './components/GizmoToolbar';
 import { gizmoState } from './components/gizmoState';
+import AdminViewToolbar from './components/AdminViewToolbar';
+import type { ViewMode } from './components/AdminViewToolbar';
 
 // ---- Edge-snap utilities ----
 /** Compute the 4 edge midpoints of a panel in world space */
@@ -169,6 +171,9 @@ const App: React.FC = () => {
   // Gizmo state
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
+
+  // Admin camera view mode
+  const [adminViewMode, setAdminViewMode] = useState<ViewMode>('free');
 
   // One-time seed: only runs if the 'metadata/seeded' flag doesn't exist yet
   useEffect(() => {
@@ -502,6 +507,8 @@ const App: React.FC = () => {
                 if (nextMode) {
                   setEditingHotspot(null);
                   setActiveHotspot(null);
+                } else {
+                  setAdminViewMode('free');
                 }
               }}
             >
@@ -533,6 +540,7 @@ const App: React.FC = () => {
             selectedWallId={selectedWallId}
             transformMode={transformMode}
             onWallTransformEnd={handleWallTransformEnd}
+            viewMode={adminViewMode}
           />
         </Suspense>
       </Canvas>
@@ -589,6 +597,11 @@ const App: React.FC = () => {
           onDeleteWall={handleDeleteWall}
           onCancelWallEdit={() => setEditingWall(null)}
         />
+      )}
+
+      {/* Admin Camera View Toolbar */}
+      {isAdminMode && (
+        <AdminViewToolbar viewMode={adminViewMode} onViewModeChange={setAdminViewMode} />
       )}
 
       {showOverlay && (

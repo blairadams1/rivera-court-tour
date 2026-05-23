@@ -6,6 +6,7 @@ import MuralWall from './MuralWall';
 import Hotspot from './Hotspot';
 import PlacedWall from './PlacedWall';
 import Controls from './Controls';
+import OrthoViewController from './OrthoViewController';
 import CameraTracker from './CameraTracker';
 import { WALLS, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, FLOOR_IMAGE_URL, CEILING_IMAGE_URL } from '../constants';
 import { Hotspot as HotspotType, WallSide, InteriorWall } from '../types';
@@ -31,6 +32,7 @@ interface ExperienceProps {
   selectedWallId?: string | null;
   transformMode?: 'translate' | 'rotate' | 'scale';
   onWallTransformEnd?: (wall: InteriorWall) => void;
+  viewMode?: string;
 }
 
 const Experience: React.FC<ExperienceProps> = ({ 
@@ -52,7 +54,8 @@ const Experience: React.FC<ExperienceProps> = ({
   effectiveBounds,
   selectedWallId = null,
   transformMode = 'translate',
-  onWallTransformEnd
+  onWallTransformEnd,
+  viewMode = 'free'
 }) => {
   const floorTexture = useTexture(FLOOR_IMAGE_URL);
   const ceilingTexture = useTexture(CEILING_IMAGE_URL);
@@ -200,7 +203,12 @@ const Experience: React.FC<ExperienceProps> = ({
         teleportTarget={teleportTarget} 
         isSidebarOpen={isSidebarOpen} 
         onNavigate={onNavigate}
+        isAdminMode={isAdminMode}
+        viewMode={viewMode}
       />
+      {viewMode !== 'free' && (
+        <OrthoViewController viewMode={viewMode as any} />
+      )}
       <CameraTracker />
       <Environment preset="studio" />
     </>
