@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { MeshReflectorMaterial, Environment, Stars, useTexture } from '@react-three/drei';
+import { MeshReflectorMaterial, Environment, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import MuralWall from './MuralWall';
 import Hotspot from './Hotspot';
@@ -196,7 +196,7 @@ const Experience: React.FC<ExperienceProps> = ({
         <meshStandardMaterial map={ceilingTexture} roughness={1} metalness={0} />
       </mesh>
 
-      <Stars radius={100} depth={50} count={500} factor={4} saturation={0} fade speed={1} />
+
       <Controls 
         targetY={scaffoldHeight} 
         focusTarget={focusTarget} 
