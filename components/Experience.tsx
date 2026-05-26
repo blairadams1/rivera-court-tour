@@ -5,11 +5,13 @@ import * as THREE from 'three';
 import MuralWall from './MuralWall';
 import Hotspot from './Hotspot';
 import PlacedWall from './PlacedWall';
+import PlacedBox from './PlacedBox';
+import PlacedCylinder from './PlacedCylinder';
 import Controls from './Controls';
 import OrthoViewController from './OrthoViewController';
 import CameraTracker from './CameraTracker';
 import { WALLS, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, FLOOR_IMAGE_URL, CEILING_IMAGE_URL } from '../constants';
-import { Hotspot as HotspotType, WallSide, InteriorWall } from '../types';
+import { Hotspot as HotspotType, WallSide, InteriorWall, InteriorBox, InteriorCylinder } from '../types';
 import { gizmoState } from './gizmoState';
 
 interface ExperienceProps {
@@ -33,6 +35,14 @@ interface ExperienceProps {
   transformMode?: 'translate' | 'rotate' | 'scale';
   onWallTransformEnd?: (wall: InteriorWall) => void;
   viewMode?: string;
+  interiorBoxes?: InteriorBox[];
+  selectedBoxId?: string | null;
+  onInteriorBoxClick?: (box: InteriorBox) => void;
+  onBoxTransformEnd?: (box: InteriorBox) => void;
+  interiorCylinders?: InteriorCylinder[];
+  selectedCylinderId?: string | null;
+  onInteriorCylinderClick?: (cyl: InteriorCylinder) => void;
+  onCylinderTransformEnd?: (cyl: InteriorCylinder) => void;
 }
 
 const Experience: React.FC<ExperienceProps> = ({ 
@@ -55,7 +65,15 @@ const Experience: React.FC<ExperienceProps> = ({
   selectedWallId = null,
   transformMode = 'translate',
   onWallTransformEnd,
-  viewMode = 'free'
+  viewMode = 'free',
+  interiorBoxes = [],
+  selectedBoxId = null,
+  onInteriorBoxClick,
+  onBoxTransformEnd,
+  interiorCylinders = [],
+  selectedCylinderId = null,
+  onInteriorCylinderClick,
+  onCylinderTransformEnd,
 }) => {
   const floorTexture = useTexture(FLOOR_IMAGE_URL);
   const ceilingTexture = useTexture(CEILING_IMAGE_URL);
@@ -143,6 +161,32 @@ const Experience: React.FC<ExperienceProps> = ({
           transformMode={transformMode}
           onSelect={onInteriorWallClick || (() => {})}
           onTransformEnd={onWallTransformEnd || (() => {})}
+        />
+      ))}
+
+      {/* Interior Boxes */}
+      {interiorBoxes.map((box) => (
+        <PlacedBox
+          key={box.id}
+          box={box}
+          isAdminMode={isAdminMode}
+          isSelected={selectedBoxId === box.id}
+          transformMode={transformMode}
+          onSelect={onInteriorBoxClick || (() => {})}
+          onTransformEnd={onBoxTransformEnd || (() => {})}
+        />
+      ))}
+
+      {/* Interior Cylinders */}
+      {interiorCylinders.map((cyl) => (
+        <PlacedCylinder
+          key={cyl.id}
+          cylinder={cyl}
+          isAdminMode={isAdminMode}
+          isSelected={selectedCylinderId === cyl.id}
+          transformMode={transformMode}
+          onSelect={onInteriorCylinderClick || (() => {})}
+          onTransformEnd={onCylinderTransformEnd || (() => {})}
         />
       ))}
 

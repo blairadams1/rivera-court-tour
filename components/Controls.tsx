@@ -261,10 +261,10 @@ const Controls: React.FC<ControlsProps> = ({ targetY, focusTarget, teleportTarge
     // Skip boundary clamping in admin mode for free navigation
     if (!isAdminMode) {
       // Per-side collision buffers (east wall gets a larger buffer)
-      const EAST_BUFFER = 20.0;   // positive X side
-      const WEST_BUFFER = 10.0;    // negative X side
-      const NORTH_BUFFER = 10.0;   // negative Z side
-      const SOUTH_BUFFER = 10.0;   // positive Z side
+      const EAST_BUFFER = 16.0;   // positive X side
+      const WEST_BUFFER = 9.0;    // negative X side
+      const NORTH_BUFFER = 9.0;   // negative Z side
+      const SOUTH_BUFFER = 9.0;   // positive Z side
 
       const maxX = ROOM_WIDTH / 2 - EAST_BUFFER;
       const minX = -(ROOM_WIDTH / 2 - WEST_BUFFER);

@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Hotspot, MediaType, GalleryImage, InteriorWall } from '../types';
+import { Hotspot, MediaType, GalleryImage, InteriorWall, InteriorBox, InteriorCylinder } from '../types';
 import { AdminGalleryEditor } from './AdminGalleryEditor';
 import AdminWallEditor from './AdminWallEditor';
-import { Image as ImageIcon, Plus, Layers, Lock, Unlock } from 'lucide-react';
+import { Image as ImageIcon, Plus, Layers, Lock, Unlock, Box, Cylinder } from 'lucide-react';
 import { gizmoState } from './gizmoState';
+import SavedStatesPanel from './SavedStatesPanel';
 
 interface AdminPanelProps {
   hotspots: Hotspot[];
@@ -23,11 +24,23 @@ interface AdminPanelProps {
   onEditWall: (wall: InteriorWall) => void;
   onDeleteWall: (id: string) => void;
   onCancelWallEdit: () => void;
+  // Interior boxes
+  interiorBoxes?: InteriorBox[];
+  selectedBoxId?: string | null;
+  onAddBox?: () => void;
+  onSelectBox?: (box: InteriorBox) => void;
+  // Interior cylinders
+  interiorCylinders?: InteriorCylinder[];
+  selectedCylinderId?: string | null;
+  onAddCylinder?: () => void;
+  onSelectCylinder?: (cyl: InteriorCylinder) => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({
   hotspots, editingHotspot, onSave, onEdit, onDelete, onCancel,
-  interiorWalls, editingWall, selectedWallId, onAddWall, onSaveWall, onSelectWall, onEditWall, onDeleteWall, onCancelWallEdit
+  interiorWalls, editingWall, selectedWallId, onAddWall, onSaveWall, onSelectWall, onEditWall, onDeleteWall, onCancelWallEdit,
+  interiorBoxes = [], selectedBoxId = null, onAddBox, onSelectBox,
+  interiorCylinders = [], selectedCylinderId = null, onAddCylinder, onSelectCylinder
 }) => {
   const [formData, setFormData] = useState<Partial<Hotspot>>({ title: '', description: '', mediaType: 'none', mediaUrl: '', gallery: [] });
   const [hotspotLocked, setHotspotLocked] = useState(gizmoState.hotspotLocked);
@@ -60,6 +73,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   if (!editingHotspot) return (
     <div className="fixed left-8 bottom-8 z-40 bg-black/40 backdrop-blur-xl border border-white/5 p-5 w-64 rounded-xl shadow-2xl animate-in slide-in-from-bottom-4 duration-500 max-h-[70vh] overflow-y-auto custom-scrollbar">
+      {/* Scene States — Save / Load snapshots */}
+      <SavedStatesPanel
+        interiorWalls={interiorWalls}
+        interiorBoxes={interiorBoxes}
+        interiorCylinders={interiorCylinders}
+      />
+
+      {/* Divider */}
+      <div className="border-t border-white/10 mb-3"></div>
+
       {/* Hotspots Section */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-2 h-2 bg-[#005e99] rounded-full shadow-[0_0_8px_#005e99]"></div>
@@ -201,6 +224,108 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           Ceiling
         </button>
       </div>
+
+      {/* Divider */}
+      <div className="border-t border-white/10 my-3"></div>
+
+      {/* Interior Boxes Section */}
+      <div className="flex items-center gap-2 mb-3">
+        <Box size={10} className="text-amber-500" />
+        <h3 className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-black">BOXES</h3>
+      </div>
+
+      <div className="text-[9px] uppercase tracking-[0.2em] text-amber-500 mb-2 font-black">
+        Placed Boxes ({interiorBoxes.length})
+      </div>
+
+      <div className="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar mb-3">
+        {interiorBoxes.map(b => (
+          <div
+            key={b.id}
+            className={`text-[10px] flex items-center gap-2 p-2 rounded border cursor-pointer group transition-all ${
+              selectedBoxId === b.id
+                ? 'bg-amber-500/20 border-amber-500/40'
+                : 'bg-white/5 hover:bg-white/10 border-white/5'
+            }`}
+            onClick={() => onSelectBox?.(b)}
+          >
+            <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center shrink-0">
+              <Box size={10} className="text-white/30" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span
+                className={`truncate block font-medium ${
+                  selectedBoxId === b.id ? 'text-white' : 'text-white/60 group-hover:text-white'
+                }`}
+              >
+                {b.label || `Box ${b.id.slice(-4)}`}
+              </span>
+              <span className="text-[8px] text-white/30 font-mono">
+                {b.scale[0].toFixed(1)}×{b.scale[1].toFixed(1)}×{b.scale[2].toFixed(1)}ft
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => onAddBox?.()}
+        className="w-full flex items-center justify-center gap-1.5 py-2 bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 text-[9px] uppercase tracking-widest font-black rounded-lg transition-all"
+      >
+        <Plus size={10} />
+        Box
+      </button>
+
+      {/* Divider */}
+      <div className="border-t border-white/10 my-3"></div>
+
+      {/* Interior Cylinders Section */}
+      <div className="flex items-center gap-2 mb-3">
+        <Cylinder size={10} className="text-teal-400" />
+        <h3 className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-black">CYLINDERS</h3>
+      </div>
+
+      <div className="text-[9px] uppercase tracking-[0.2em] text-teal-400 mb-2 font-black">
+        Placed Cylinders ({interiorCylinders.length})
+      </div>
+
+      <div className="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar mb-3">
+        {interiorCylinders.map(c => (
+          <div
+            key={c.id}
+            className={`text-[10px] flex items-center gap-2 p-2 rounded border cursor-pointer group transition-all ${
+              selectedCylinderId === c.id
+                ? 'bg-teal-500/20 border-teal-500/40'
+                : 'bg-white/5 hover:bg-white/10 border-white/5'
+            }`}
+            onClick={() => onSelectCylinder?.(c)}
+          >
+            <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center shrink-0">
+              <Cylinder size={10} className="text-white/30" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span
+                className={`truncate block font-medium ${
+                  selectedCylinderId === c.id ? 'text-white' : 'text-white/60 group-hover:text-white'
+                }`}
+              >
+                {c.label || `Cylinder ${c.id.slice(-4)}`}
+              </span>
+              <span className="text-[8px] text-white/30 font-mono">
+                Ø{c.scale[0].toFixed(1)}×{c.scale[1].toFixed(1)}ft
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => onAddCylinder?.()}
+        className="w-full flex items-center justify-center gap-1.5 py-2 bg-teal-500/20 hover:bg-teal-500/40 text-teal-400 text-[9px] uppercase tracking-widest font-black rounded-lg transition-all"
+      >
+        <Plus size={10} />
+        Cylinder
+      </button>
     </div>
   );
 

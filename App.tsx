@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import Experience from './components/Experience';
@@ -9,14 +9,19 @@ import HotspotInfoPanel from './components/HotspotInfoPanel';
 import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
 import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, MAX_LIFT, COLLISION_BUFFER } from './constants';
-import { Hotspot, WallSide, InteriorWall } from './types';
+import { Hotspot, WallSide, InteriorWall, InteriorBox, InteriorCylinder } from './types';
 import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import GizmoToolbar from './components/GizmoToolbar';
+import BoxGizmoToolbar from './components/BoxGizmoToolbar';
+import CylinderGizmoToolbar from './components/CylinderGizmoToolbar';
 import { gizmoState } from './components/gizmoState';
 import AdminViewToolbar from './components/AdminViewToolbar';
+import AdminBoxEditor from './components/AdminBoxEditor';
+import AdminCylinderEditor from './components/AdminCylinderEditor';
 import type { ViewMode } from './components/AdminViewToolbar';
+import { undoManager } from './undoManager';
 
 // ---- Edge-snap utilities ----
 /** Compute the 4 edge midpoints of a panel in world space */
@@ -168,12 +173,39 @@ const App: React.FC = () => {
   const [interiorWalls, setInteriorWalls] = useState<InteriorWall[]>([]);
   const [editingWall, setEditingWall] = useState<InteriorWall | null>(null);
 
+  // Interior boxes state
+  const [interiorBoxes, setInteriorBoxes] = useState<InteriorBox[]>([]);
+  const [editingBox, setEditingBox] = useState<InteriorBox | null>(null);
+  const [selectedBoxId, setSelectedBoxId] = useState<string | null>(null);
+
+  // Interior cylinders state
+  const [interiorCylinders, setInteriorCylinders] = useState<InteriorCylinder[]>([]);
+  const [editingCylinder, setEditingCylinder] = useState<InteriorCylinder | null>(null);
+  const [selectedCylinderId, setSelectedCylinderId] = useState<string | null>(null);
+
   // Gizmo state
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
 
   // Admin camera view mode
   const [adminViewMode, setAdminViewMode] = useState<ViewMode>('free');
+
+  // Undo toast
+  const [undoToast, setUndoToast] = useState<{ message: string; type: 'undo' | 'redo'; key: number } | null>(null);
+  const [, forceUpdate] = useState(0);
+
+  // Refs for current state (allows handlers to read current values without stale closures)
+  const wallsRef = useRef<InteriorWall[]>([]);
+  useEffect(() => { wallsRef.current = interiorWalls; }, [interiorWalls]);
+  const boxesRef = useRef<InteriorBox[]>([]);
+  useEffect(() => { boxesRef.current = interiorBoxes; }, [interiorBoxes]);
+  const cylindersRef = useRef<InteriorCylinder[]>([]);
+  useEffect(() => { cylindersRef.current = interiorCylinders; }, [interiorCylinders]);
+
+  // Subscribe to undoManager changes to update UI
+  useEffect(() => {
+    undoManager.subscribe(() => forceUpdate(n => n + 1));
+  }, []);
 
   // One-time seed: only runs if the 'metadata/seeded' flag doesn't exist yet
   useEffect(() => {
@@ -214,6 +246,34 @@ const App: React.FC = () => {
         return data;
       });
       setInteriorWalls(fetched);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Live-sync interior boxes from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'interiorBoxes'), (snapshot) => {
+      const fetched = snapshot.docs.map(d => {
+        const data = { ...d.data(), id: d.id } as InteriorBox;
+        if (!Array.isArray(data.rotation)) data.rotation = [0, 0, 0];
+        if (!Array.isArray(data.scale) || data.scale.length < 3) data.scale = [3, 3, 3];
+        return data;
+      });
+      setInteriorBoxes(fetched);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Live-sync interior cylinders from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'interiorCylinders'), (snapshot) => {
+      const fetched = snapshot.docs.map(d => {
+        const data = { ...d.data(), id: d.id } as InteriorCylinder;
+        if (!Array.isArray(data.rotation)) data.rotation = [0, 0, 0];
+        if (!Array.isArray(data.scale) || data.scale.length < 3) data.scale = [2, 6, 2];
+        return data;
+      });
+      setInteriorCylinders(fetched);
     });
     return () => unsubscribe();
   }, []);
@@ -350,17 +410,21 @@ const App: React.FC = () => {
       label: ''
     };
     await setDoc(doc(db, 'interiorWalls', newWall.id), newWall);
+    undoManager.push({ type: 'create', collection: 'interiorWalls', id: newWall.id, before: null, after: { ...newWall }, label: `Add ${type}`, timestamp: Date.now() });
     setSelectedWallId(newWall.id);
     setEditingWall(null);
   }, []);
 
   const handleSaveWall = useCallback(async (wall: InteriorWall) => {
+    const before = wallsRef.current.find(w => w.id === wall.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorWalls', id: wall.id, before: { ...before }, after: { ...wall }, label: 'Edit wall', timestamp: Date.now() });
     await setDoc(doc(db, 'interiorWalls', wall.id), wall);
-    // Update local editing state to keep editor in sync
     setEditingWall(wall);
   }, []);
 
   const handleDeleteWall = useCallback(async (id: string) => {
+    const before = wallsRef.current.find(w => w.id === id);
+    if (before) undoManager.push({ type: 'delete', collection: 'interiorWalls', id, before: { ...before }, after: null, label: 'Delete wall', timestamp: Date.now() });
     await deleteDoc(doc(db, 'interiorWalls', id));
     setEditingWall(null);
   }, []);
@@ -382,38 +446,234 @@ const App: React.FC = () => {
 
   const handleInteriorWallClick = useCallback((wall: InteriorWall) => {
     if (isAdminMode) {
-      // Select wall for gizmo controls (not popup)
+      // Select wall for gizmo controls (not popup) — deselect any box
       setSelectedWallId(prev => prev === wall.id ? null : wall.id);
+      setSelectedBoxId(null);
+      setSelectedCylinderId(null);
       setEditingWall(null);
+      setEditingBox(null);
+      setEditingCylinder(null);
     }
   }, [isAdminMode]);
 
   const handleWallTransformEnd = useCallback(async (wall: InteriorWall) => {
-    const final = gizmoState.snapEdges ? snapToNearestEdge(wall, interiorWalls) : wall;
+    const before = wallsRef.current.find(w => w.id === wall.id);
+    const final = gizmoState.snapEdges ? snapToNearestEdge(wall, wallsRef.current) : wall;
+    if (before) undoManager.push({ type: 'update', collection: 'interiorWalls', id: wall.id, before: { ...before }, after: { ...final }, label: 'Move wall', timestamp: Date.now() });
     if (final !== wall) {
-      // Update local state so the panel visually snaps
       setInteriorWalls(prev => prev.map(w => w.id === final.id ? final : w));
     }
     await setDoc(doc(db, 'interiorWalls', final.id), final);
-  }, [interiorWalls]);
+  }, []);
 
   // Handle inline property changes from GizmoToolbar scrubbers
   const handleGizmoPropertyChange = useCallback(async (wall: InteriorWall) => {
-    // Update local state immediately for responsive feel
+    const before = wallsRef.current.find(w => w.id === wall.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorWalls', id: wall.id, before: { ...before }, after: { ...wall }, label: 'Edit wall', timestamp: Date.now() });
     setInteriorWalls(prev => prev.map(w => w.id === wall.id ? wall : w));
-    // Persist to Firestore
     await setDoc(doc(db, 'interiorWalls', wall.id), wall);
   }, []);
 
-  // Keyboard shortcuts for gizmo modes
+  // --- Interior Box CRUD ---
+  const handleAddBox = useCallback(async () => {
+    const newBox: InteriorBox = {
+      id: `ib-${Date.now()}`,
+      position: [0, 3, 0],
+      rotation: [0, 0, 0],
+      scale: [3, 3, 3],
+      label: '',
+      textureMode: 'uniform',
+      color: '#cccccc',
+    };
+    await setDoc(doc(db, 'interiorBoxes', newBox.id), newBox);
+    undoManager.push({ type: 'create', collection: 'interiorBoxes', id: newBox.id, before: null, after: { ...newBox }, label: 'Add box', timestamp: Date.now() });
+    setSelectedBoxId(newBox.id);
+    setSelectedWallId(null);
+    setEditingBox(null);
+    setEditingWall(null);
+  }, []);
+
+  const handleSaveBox = useCallback(async (box: InteriorBox) => {
+    const before = boxesRef.current.find(b => b.id === box.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorBoxes', id: box.id, before: { ...before }, after: { ...box }, label: 'Edit box', timestamp: Date.now() });
+    await setDoc(doc(db, 'interiorBoxes', box.id), box);
+    setEditingBox(box);
+  }, []);
+
+  const handleDeleteBox = useCallback(async (id: string) => {
+    const before = boxesRef.current.find(b => b.id === id);
+    if (before) undoManager.push({ type: 'delete', collection: 'interiorBoxes', id, before: { ...before }, after: null, label: 'Delete box', timestamp: Date.now() });
+    await deleteDoc(doc(db, 'interiorBoxes', id));
+    setEditingBox(null);
+    setSelectedBoxId(null);
+  }, []);
+
+  const handleCloneBox = useCallback(async (box: InteriorBox) => {
+    const cloned: InteriorBox = {
+      ...box,
+      id: `ib-${Date.now()}`,
+      label: box.label ? `${box.label} copy` : '',
+      position: [box.position[0] + 2, box.position[1], box.position[2]],
+    };
+    await setDoc(doc(db, 'interiorBoxes', cloned.id), cloned);
+    setSelectedBoxId(cloned.id);
+  }, []);
+
+  const handleEditBox = useCallback((box: InteriorBox) => {
+    setEditingBox(box);
+    setSelectedBoxId(null);
+  }, []);
+
+  const handleInteriorBoxClick = useCallback((box: InteriorBox) => {
+    if (isAdminMode) {
+      setSelectedBoxId(prev => prev === box.id ? null : box.id);
+      setSelectedWallId(null);
+      setSelectedCylinderId(null);
+      setEditingWall(null);
+      setEditingBox(null);
+      setEditingCylinder(null);
+    }
+  }, [isAdminMode]);
+
+  const handleBoxTransformEnd = useCallback(async (box: InteriorBox) => {
+    const before = boxesRef.current.find(b => b.id === box.id);
+    if (before) undoManager.push({ type: 'update', collection: 'interiorBoxes', id: box.id, before: { ...before }, after: { ...box }, label: 'Move box', timestamp: Date.now() });
+    setInteriorBoxes(prev => prev.map(b => b.id === box.id ? box : b));
+    await setDoc(doc(db, 'interiorBoxes', box.id), box);
+  }, []);
+
+  const handleBoxGizmoPropertyChange = useCallback(async (box: InteriorBox) => {
+    const before = boxesRef.current.find(b => b.id === box.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorBoxes', id: box.id, before: { ...before }, after: { ...box }, label: 'Edit box', timestamp: Date.now() });
+    setInteriorBoxes(prev => prev.map(b => b.id === box.id ? box : b));
+    await setDoc(doc(db, 'interiorBoxes', box.id), box);
+  }, []);
+
+  // --- Interior Cylinder CRUD ---
+  const handleAddCylinder = useCallback(async () => {
+    const newCyl: InteriorCylinder = {
+      id: `ic-${Date.now()}`,
+      position: [0, 3, 0],
+      rotation: [0, 0, 0],
+      scale: [2, 6, 2],
+      label: '',
+      segments: 32,
+      textureMode: 'uniform',
+      color: '#cccccc',
+    };
+    await setDoc(doc(db, 'interiorCylinders', newCyl.id), newCyl);
+    undoManager.push({ type: 'create', collection: 'interiorCylinders', id: newCyl.id, before: null, after: { ...newCyl }, label: 'Add cylinder', timestamp: Date.now() });
+    setSelectedCylinderId(newCyl.id);
+    setSelectedWallId(null);
+    setSelectedBoxId(null);
+    setEditingCylinder(null);
+    setEditingWall(null);
+    setEditingBox(null);
+  }, []);
+
+  const handleSaveCylinder = useCallback(async (cyl: InteriorCylinder) => {
+    const before = cylindersRef.current.find(c => c.id === cyl.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorCylinders', id: cyl.id, before: { ...before }, after: { ...cyl }, label: 'Edit cylinder', timestamp: Date.now() });
+    await setDoc(doc(db, 'interiorCylinders', cyl.id), cyl);
+    setEditingCylinder(cyl);
+  }, []);
+
+  const handleDeleteCylinder = useCallback(async (id: string) => {
+    const before = cylindersRef.current.find(c => c.id === id);
+    if (before) undoManager.push({ type: 'delete', collection: 'interiorCylinders', id, before: { ...before }, after: null, label: 'Delete cylinder', timestamp: Date.now() });
+    await deleteDoc(doc(db, 'interiorCylinders', id));
+    setEditingCylinder(null);
+    setSelectedCylinderId(null);
+  }, []);
+
+  const handleCloneCylinder = useCallback(async (cyl: InteriorCylinder) => {
+    const cloned: InteriorCylinder = {
+      ...cyl,
+      id: `ic-${Date.now()}`,
+      label: cyl.label ? `${cyl.label} copy` : '',
+      position: [cyl.position[0] + 2, cyl.position[1], cyl.position[2]],
+    };
+    await setDoc(doc(db, 'interiorCylinders', cloned.id), cloned);
+    setSelectedCylinderId(cloned.id);
+  }, []);
+
+  const handleEditCylinder = useCallback((cyl: InteriorCylinder) => {
+    setEditingCylinder(cyl);
+    setSelectedCylinderId(null);
+  }, []);
+
+  const handleInteriorCylinderClick = useCallback((cyl: InteriorCylinder) => {
+    if (isAdminMode) {
+      setSelectedCylinderId(prev => prev === cyl.id ? null : cyl.id);
+      setSelectedWallId(null);
+      setSelectedBoxId(null);
+      setEditingWall(null);
+      setEditingBox(null);
+      setEditingCylinder(null);
+    }
+  }, [isAdminMode]);
+
+  const handleCylinderTransformEnd = useCallback(async (cyl: InteriorCylinder) => {
+    const before = cylindersRef.current.find(c => c.id === cyl.id);
+    if (before) undoManager.push({ type: 'update', collection: 'interiorCylinders', id: cyl.id, before: { ...before }, after: { ...cyl }, label: 'Move cylinder', timestamp: Date.now() });
+    setInteriorCylinders(prev => prev.map(c => c.id === cyl.id ? cyl : c));
+    await setDoc(doc(db, 'interiorCylinders', cyl.id), cyl);
+  }, []);
+
+  const handleCylinderGizmoPropertyChange = useCallback(async (cyl: InteriorCylinder) => {
+    const before = cylindersRef.current.find(c => c.id === cyl.id);
+    if (before) undoManager.pushMerge({ type: 'update', collection: 'interiorCylinders', id: cyl.id, before: { ...before }, after: { ...cyl }, label: 'Edit cylinder', timestamp: Date.now() });
+    setInteriorCylinders(prev => prev.map(c => c.id === cyl.id ? cyl : c));
+    await setDoc(doc(db, 'interiorCylinders', cyl.id), cyl);
+  }, []);
+
+  // Undo/Redo helper
+  const performUndo = useCallback(async () => {
+    const action = await undoManager.undo(db);
+    if (action) {
+      setSelectedWallId(null); setSelectedBoxId(null); setSelectedCylinderId(null);
+      setUndoToast({ message: `Undo: ${action.label}`, type: 'undo', key: Date.now() });
+    }
+  }, []);
+
+  const performRedo = useCallback(async () => {
+    const action = await undoManager.redo(db);
+    if (action) {
+      setUndoToast({ message: `Redo: ${action.label}`, type: 'redo', key: Date.now() });
+    }
+  }, []);
+
+  // Auto-hide toast
+  useEffect(() => {
+    if (!undoToast) return;
+    const t = setTimeout(() => setUndoToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [undoToast]);
+
+  // Keyboard shortcuts for gizmo modes + undo/redo
   useEffect(() => {
     if (!isAdminMode) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle when a wall is selected and not in text input
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
-      if (selectedWallId) {
+      // Ctrl+Z = undo, Ctrl+Shift+Z / Ctrl+Y = redo
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key === 'z' || e.key === 'Z') {
+          e.preventDefault();
+          if (e.shiftKey) { performRedo(); }
+          else { performUndo(); }
+          return;
+        }
+        if (e.key === 'y' || e.key === 'Y') {
+          e.preventDefault();
+          performRedo();
+          return;
+        }
+      }
+
+      const hasSelection = selectedWallId || selectedBoxId || selectedCylinderId;
+      if (hasSelection) {
         switch (e.key) {
           case '1': setTransformMode('translate'); break;
           case '2': setTransformMode('rotate'); break;
@@ -421,10 +681,22 @@ const App: React.FC = () => {
           case 'g': case 'G': setTransformMode('translate'); break;
           case 'r': case 'R': setTransformMode('rotate'); break;
           case 's': case 'S': setTransformMode('scale'); break;
-          case 'Escape': setSelectedWallId(null); break;
-          case 'Delete': case 'Backspace': {
-            handleDeleteWall(selectedWallId);
+          case 'Escape':
             setSelectedWallId(null);
+            setSelectedBoxId(null);
+            setSelectedCylinderId(null);
+            break;
+          case 'Delete': case 'Backspace': {
+            if (selectedWallId) {
+              handleDeleteWall(selectedWallId);
+              setSelectedWallId(null);
+            } else if (selectedBoxId) {
+              handleDeleteBox(selectedBoxId);
+              setSelectedBoxId(null);
+            } else if (selectedCylinderId) {
+              handleDeleteCylinder(selectedCylinderId);
+              setSelectedCylinderId(null);
+            }
             break;
           }
         }
@@ -432,7 +704,7 @@ const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAdminMode, selectedWallId, handleDeleteWall]);
+  }, [isAdminMode, selectedWallId, selectedBoxId, selectedCylinderId, handleDeleteWall, handleDeleteBox, handleDeleteCylinder, performUndo, performRedo]);
 
   return (
     <div className="relative w-full h-screen bg-[#050505] text-white select-none overflow-hidden">
@@ -541,6 +813,14 @@ const App: React.FC = () => {
             transformMode={transformMode}
             onWallTransformEnd={handleWallTransformEnd}
             viewMode={adminViewMode}
+            interiorBoxes={interiorBoxes}
+            selectedBoxId={selectedBoxId}
+            onInteriorBoxClick={handleInteriorBoxClick}
+            onBoxTransformEnd={handleBoxTransformEnd}
+            interiorCylinders={interiorCylinders}
+            selectedCylinderId={selectedCylinderId}
+            onInteriorCylinderClick={handleInteriorCylinderClick}
+            onCylinderTransformEnd={handleCylinderTransformEnd}
           />
         </Suspense>
       </Canvas>
@@ -571,6 +851,54 @@ const App: React.FC = () => {
           />
         );
       })()}
+
+      {/* Box Gizmo Toolbar */}
+      {isAdminMode && selectedBoxId && !editingBox && (() => {
+        const selectedBox = interiorBoxes.find(b => b.id === selectedBoxId);
+        if (!selectedBox) return null;
+        return (
+          <BoxGizmoToolbar
+            box={selectedBox}
+            transformMode={transformMode}
+            onTransformModeChange={setTransformMode}
+            onOpenEditor={() => {
+              setEditingBox(selectedBox);
+              setSelectedBoxId(null);
+            }}
+            onClone={() => handleCloneBox(selectedBox)}
+            onDelete={() => {
+              handleDeleteBox(selectedBoxId);
+              setSelectedBoxId(null);
+            }}
+            onDeselect={() => setSelectedBoxId(null)}
+            onPropertyChange={handleBoxGizmoPropertyChange}
+          />
+        );
+      })()}
+
+      {/* Cylinder Gizmo Toolbar */}
+      {isAdminMode && selectedCylinderId && !editingCylinder && (() => {
+        const selectedCyl = interiorCylinders.find(c => c.id === selectedCylinderId);
+        if (!selectedCyl) return null;
+        return (
+          <CylinderGizmoToolbar
+            cylinder={selectedCyl}
+            transformMode={transformMode}
+            onTransformModeChange={setTransformMode}
+            onOpenEditor={() => {
+              setEditingCylinder(selectedCyl);
+              setSelectedCylinderId(null);
+            }}
+            onClone={() => handleCloneCylinder(selectedCyl)}
+            onDelete={() => {
+              handleDeleteCylinder(selectedCylinderId);
+              setSelectedCylinderId(null);
+            }}
+            onDeselect={() => setSelectedCylinderId(null)}
+            onPropertyChange={handleCylinderGizmoPropertyChange}
+          />
+        );
+      })()}
       
       {/* Detail Panel Layer */}
       <HotspotInfoPanel 
@@ -579,7 +907,7 @@ const App: React.FC = () => {
         onClose={() => { setIsSidebarVisible(false); setFocusTarget(null); }}
       />
       
-      {isAdminMode && (
+      {isAdminMode && !editingBox && !editingCylinder && (
         <AdminPanel 
           hotspots={hotspots} 
           editingHotspot={editingHotspot} 
@@ -596,12 +924,86 @@ const App: React.FC = () => {
           onEditWall={handleEditWall}
           onDeleteWall={handleDeleteWall}
           onCancelWallEdit={() => setEditingWall(null)}
+          interiorBoxes={interiorBoxes}
+          selectedBoxId={selectedBoxId}
+          onAddBox={handleAddBox}
+          onSelectBox={handleInteriorBoxClick}
+          interiorCylinders={interiorCylinders}
+          selectedCylinderId={selectedCylinderId}
+          onAddCylinder={handleAddCylinder}
+          onSelectCylinder={handleInteriorCylinderClick}
+        />
+      )}
+
+      {/* Box Editor */}
+      {isAdminMode && editingBox && (
+        <AdminBoxEditor
+          box={editingBox}
+          onSave={handleSaveBox}
+          onDelete={handleDeleteBox}
+          onCancel={() => setEditingBox(null)}
+        />
+      )}
+
+      {/* Cylinder Editor */}
+      {isAdminMode && editingCylinder && (
+        <AdminCylinderEditor
+          cylinder={editingCylinder}
+          onSave={handleSaveCylinder}
+          onDelete={handleDeleteCylinder}
+          onCancel={() => setEditingCylinder(null)}
         />
       )}
 
       {/* Admin Camera View Toolbar */}
       {isAdminMode && (
         <AdminViewToolbar viewMode={adminViewMode} onViewModeChange={setAdminViewMode} />
+      )}
+
+      {/* Undo/Redo floating bar */}
+      {isAdminMode && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-1 bg-black/70 backdrop-blur-xl border border-white/10 rounded-lg px-2 py-1 shadow-xl">
+          <button
+            onClick={performUndo}
+            disabled={!undoManager.canUndo}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] uppercase tracking-[0.1em] font-black transition-all ${
+              undoManager.canUndo ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-white/15 cursor-not-allowed'
+            }`}
+            title={undoManager.undoLabel ? `Undo: ${undoManager.undoLabel} (Ctrl+Z)` : 'Nothing to undo'}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            Undo
+            {undoManager.undoCount > 0 && <span className="text-[8px] text-white/30 ml-0.5">{undoManager.undoCount}</span>}
+          </button>
+          <div className="w-px h-4 bg-white/10"></div>
+          <button
+            onClick={performRedo}
+            disabled={!undoManager.canRedo}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] uppercase tracking-[0.1em] font-black transition-all ${
+              undoManager.canRedo ? 'text-white/70 hover:text-white hover:bg-white/10' : 'text-white/15 cursor-not-allowed'
+            }`}
+            title={undoManager.redoLabel ? `Redo: ${undoManager.redoLabel} (Ctrl+Shift+Z)` : 'Nothing to redo'}
+          >
+            Redo
+            {undoManager.redoCount > 0 && <span className="text-[8px] text-white/30 ml-0.5">{undoManager.redoCount}</span>}
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path></svg>
+          </button>
+          <span className="text-[8px] text-white/20 tracking-widest ml-1">CTRL+Z</span>
+        </div>
+      )}
+
+      {/* Undo Toast */}
+      {undoToast && (
+        <div
+          key={undoToast.key}
+          className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[250] px-5 py-2.5 rounded-xl bg-black/85 backdrop-blur-xl border border-white/15 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
+          <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${
+            undoToast.type === 'undo' ? 'text-amber-400' : 'text-teal-400'
+          }`}>
+            {undoToast.message}
+          </span>
+        </div>
       )}
 
       {showOverlay && (

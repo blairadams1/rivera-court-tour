@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import { TransformControls } from '@react-three/drei';
+import { TransformControls, Outlines } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteriorWall } from '../types';
 import { gizmoState } from './gizmoState';
@@ -75,19 +75,22 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
   const baseXTilt = isFloor ? -Math.PI / 2 : isCeiling ? Math.PI / 2 : 0;
   const pivotRotation: [number, number, number] = [baseXTilt + xRot, yRot, zRot];
 
-  // Mesh offset: for walls, shift up by 0.5 in local space so the
+  // Mesh offset: for base-pivot walls, shift up by 0.5 in local space so the
   // pivot group's origin sits at the bottom edge of the plane.
-  // For floors/ceilings (horizontal), keep the origin at the center.
-  const meshOffset: [number, number, number] = isHorizontal ? [0, 0, 0] : [0, 0.5, 0];
+  // For floors/ceilings (horizontal) or center-pivot mode, keep origin at center.
+  const useBasePivot = gizmoState.pivotAtBase && !isHorizontal;
+  const meshOffset: [number, number, number] = useBasePivot ? [0, 0.5, 0] : [0, 0, 0];
 
   // ---- Sync pivot transform from props (only when not being gizmo-dragged) ----
   useEffect(() => {
     if (!pivotRef.current || gizmoState.isDragging) return;
-    // For walls the pivot sits at the base: center_y − half_height
-    const baseY = isHorizontal ? wall.position[1] : wall.position[1] - wall.scale[1] / 2;
+    // Base-pivot: pivot at bottom edge; center-pivot: pivot at stored center Y
+    const pivotY = useBasePivot
+      ? wall.position[1] - wall.scale[1] / 2
+      : wall.position[1];
     pivotRef.current.position.set(
       safeNum(wall.position[0]),
-      safeNum(baseY),
+      safeNum(pivotY),
       safeNum(wall.position[2])
     );
     // Only set rotation from props when NOT in billboard mode
@@ -125,13 +128,14 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
     const onDraggingChanged = (event: { value: boolean }) => {
       gizmoState.isDragging = event.value;
       if (!event.value && pivotRef.current) {
-        // Drag ended — read from pivot and convert base→center for storage
+        // Drag ended — read from pivot and convert to center Y for storage
         const pivot = pivotRef.current;
 
-        // For walls, convert base Y back to center Y
-        const rawY = isHorizontal
-          ? pivot.position.y
-          : pivot.position.y + Math.abs(pivot.scale.y) / 2;
+        // Base pivot: convert base Y back to center Y for storage
+        // Center pivot: use Y directly (already center Y)
+        const rawY = useBasePivot
+          ? pivot.position.y + Math.abs(pivot.scale.y) / 2
+          : pivot.position.y;
 
         // Position
         const precise = gizmoState.precisionMode;
@@ -245,12 +249,21 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
           <mesh position={meshOffset}>
             <planeGeometry args={[1, 1]} />
             <meshBasicMaterial
-              color={isSelected ? '#00aaff' : '#005e99'}
+              color={isSelected ? '#00ddff' : '#005e99'}
               wireframe
               transparent
-              opacity={isSelected ? 0.6 : 0.4}
+              opacity={isSelected ? 0.8 : 0.4}
               side={THREE.DoubleSide}
             />
+          </mesh>
+        )}
+
+        {/* Bright selection outline */}
+        {isAdminMode && isSelected && gizmoState.showOutlines && (
+          <mesh position={meshOffset}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial visible={false} />
+            <Outlines thickness={4} color="#00ddff" />
           </mesh>
         )}
       </group>

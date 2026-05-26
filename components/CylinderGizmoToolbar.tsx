@@ -1,19 +1,18 @@
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, Eye, X, Copy, Anchor } from 'lucide-react';
-import { InteriorWall } from '../types';
-import { ROOM_HEIGHT } from '../constants';
+import React, { useState, useCallback, useRef } from 'react';
+import { Move, RotateCw, Maximize2, Pencil, Trash2, ChevronDown, ChevronUp, X, Copy, Anchor } from 'lucide-react';
+import { InteriorCylinder } from '../types';
 import { gizmoState } from './gizmoState';
 
-interface GizmoToolbarProps {
-  wall: InteriorWall;
+interface CylinderGizmoToolbarProps {
+  cylinder: InteriorCylinder;
   transformMode: 'translate' | 'rotate' | 'scale';
   onTransformModeChange: (mode: 'translate' | 'rotate' | 'scale') => void;
   onOpenEditor: () => void;
   onClone: () => void;
   onDelete: () => void;
   onDeselect: () => void;
-  onPropertyChange: (wall: InteriorWall) => void;
+  onPropertyChange: (cyl: InteriorCylinder) => void;
 }
 
 // Inline numeric scrubber — click-drag horizontally to change value, or click to type
@@ -110,8 +109,8 @@ const Scrubber: React.FC<{
   );
 };
 
-const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
-  wall, transformMode, onTransformModeChange,
+const CylinderGizmoToolbar: React.FC<CylinderGizmoToolbarProps> = ({
+  cylinder, transformMode, onTransformModeChange,
   onOpenEditor, onClone, onDelete, onDeselect, onPropertyChange
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -144,50 +143,53 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
     gizmoState.pivotAtBase = next;
   }, [pivotAtBase]);
 
-  // Show the properties section relevant to current transform mode
-  const modeLabel = transformMode === 'translate' ? 'Position' : transformMode === 'rotate' ? 'Rotation' : 'Scale';
-
   const updatePosition = useCallback((axis: 0 | 1 | 2, val: number) => {
-    const pos: [number, number, number] = [...wall.position];
+    const pos: [number, number, number] = [...cylinder.position];
     pos[axis] = val;
-    onPropertyChange({ ...wall, position: pos });
-  }, [wall, onPropertyChange]);
+    onPropertyChange({ ...cylinder, position: pos });
+  }, [cylinder, onPropertyChange]);
 
-  const updateScale = useCallback((axis: 0 | 1, val: number) => {
-    const s: [number, number] = [...wall.scale];
+  /** Diameter scrubber — updates scale[0] AND scale[2] together to keep it circular */
+  const updateDiameter = useCallback((val: number) => {
+    const s: [number, number, number] = [...cylinder.scale];
+    s[0] = val;
+    s[2] = val;
+    onPropertyChange({ ...cylinder, scale: s });
+  }, [cylinder, onPropertyChange]);
+
+  /** Height scrubber — updates scale[1] */
+  const updateHeight = useCallback((val: number) => {
+    const s: [number, number, number] = [...cylinder.scale];
+    s[1] = val;
+    onPropertyChange({ ...cylinder, scale: s });
+  }, [cylinder, onPropertyChange]);
+
+  /** Advanced per-axis scale for expanded panel (allows elliptical) */
+  const updateScale = useCallback((axis: 0 | 1 | 2, val: number) => {
+    const s: [number, number, number] = [...cylinder.scale];
     s[axis] = val;
-    onPropertyChange({ ...wall, scale: s });
-  }, [wall, onPropertyChange]);
+    onPropertyChange({ ...cylinder, scale: s });
+  }, [cylinder, onPropertyChange]);
 
   const updateRotation = useCallback((axis: 0 | 1 | 2, val: number) => {
-    const r: [number, number, number] = Array.isArray(wall.rotation) ? [...wall.rotation] : [0, wall.rotation as number, 0];
+    const r: [number, number, number] = [...cylinder.rotation];
     r[axis] = ((val % 360) + 360) % 360;
-    onPropertyChange({ ...wall, rotation: r });
-  }, [wall, onPropertyChange]);
-
-  const updateType = useCallback((type: 'wall' | 'floor' | 'ceiling') => {
-    const isHorizontal = type === 'floor' || type === 'ceiling';
-    onPropertyChange({
-      ...wall,
-      type,
-      billboard: isHorizontal ? false : wall.billboard,
-      position: type === 'floor'
-        ? [wall.position[0], 0.05, wall.position[2]]
-        : type === 'ceiling'
-        ? [wall.position[0], ROOM_HEIGHT - 0.05, wall.position[2]]
-        : [wall.position[0], wall.position[1] < 1 ? 10 : wall.position[1], wall.position[2]]
-    });
-  }, [wall, onPropertyChange]);
-
-  const toggleBillboard = useCallback(() => {
-    onPropertyChange({ ...wall, billboard: !wall.billboard });
-  }, [wall, onPropertyChange]);
+    onPropertyChange({ ...cylinder, rotation: r });
+  }, [cylinder, onPropertyChange]);
 
   return (
     <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-top-2 duration-300">
       <div className="flex flex-col items-center">
         {/* Main Toolbar Row */}
         <div className="flex items-center gap-1 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl">
+          {/* CYLINDER badge */}
+          <span className="px-2.5 py-1.5 text-[9px] uppercase tracking-[0.15em] font-black text-teal-400/80 bg-teal-500/20 rounded-lg border border-teal-400/20">
+            CYLINDER
+          </span>
+
+          {/* Separator */}
+          <div className="w-px h-6 bg-white/10 mx-1"></div>
+
           {/* Transform Mode Buttons */}
           <button
             onClick={() => onTransformModeChange('translate')}
@@ -223,78 +225,6 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
           {/* Separator */}
           <div className="w-px h-6 bg-white/10 mx-1"></div>
 
-          {/* Live readout for current mode */}
-          <div className="flex items-center gap-1 px-2">
-            {transformMode === 'translate' && (
-              <>
-                <Scrubber label="X" value={wall.position[0]} step={0.5} color="#ff6b6b" onChange={v => updatePosition(0, v)} />
-                <Scrubber label="Y" value={wall.position[1]} step={0.5} min={0} color="#51cf66" onChange={v => updatePosition(1, v)} />
-                <Scrubber label="Z" value={wall.position[2]} step={0.5} color="#339af0" onChange={v => updatePosition(2, v)} />
-              </>
-            )}
-            {transformMode === 'rotate' && (() => {
-              const r = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation as number, 0];
-              return (
-                <>
-                  <Scrubber label="X°" value={r[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
-                  <Scrubber label="Y°" value={r[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
-                  <Scrubber label="Z°" value={r[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
-                </>
-              );
-            })()}
-            {transformMode === 'scale' && (
-              <>
-                <Scrubber label="W" value={wall.scale[0]} step={0.5} min={1} max={60} color="#ff6b6b" onChange={v => updateScale(0, v)} />
-                <Scrubber label="H" value={wall.scale[1]} step={0.5} min={1} max={40} color="#51cf66" onChange={v => updateScale(1, v)} />
-              </>
-            )}
-          </div>
-
-          {/* Separator */}
-          <div className="w-px h-6 bg-white/10 mx-1"></div>
-
-          {/* Type toggle */}
-          <div className="flex items-center bg-black/40 rounded-lg p-0.5 border border-white/5">
-            <button
-              onClick={() => updateType('wall')}
-              className={`px-2.5 py-1.5 text-[9px] uppercase tracking-[0.1em] font-black rounded-md transition-all ${
-                wall.type === 'wall' ? 'bg-[#005e99]/60 text-white' : 'text-white/30 hover:text-white/60'
-              }`}
-            >
-              Wall
-            </button>
-            <button
-              onClick={() => updateType('floor')}
-              className={`px-2.5 py-1.5 text-[9px] uppercase tracking-[0.1em] font-black rounded-md transition-all ${
-                wall.type === 'floor' ? 'bg-[#005e99]/60 text-white' : 'text-white/30 hover:text-white/60'
-              }`}
-            >
-              Floor
-            </button>
-            <button
-              onClick={() => updateType('ceiling')}
-              className={`px-2.5 py-1.5 text-[9px] uppercase tracking-[0.1em] font-black rounded-md transition-all ${
-                wall.type === 'ceiling' ? 'bg-[#005e99]/60 text-white' : 'text-white/30 hover:text-white/60'
-              }`}
-            >
-              Ceil
-            </button>
-          </div>
-
-          {/* Billboard / Look-At toggle */}
-          {wall.type === 'wall' && (
-            <button
-              onClick={toggleBillboard}
-              className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black transition-all ${
-                wall.billboard ? 'bg-[#005e99] text-white shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-              }`}
-              title="Billboard: panel always faces camera"
-            >
-              <Eye size={13} />
-              <span className="hidden xl:inline">Look At</span>
-            </button>
-          )}
-
           {/* Pivot toggle */}
           <button
             onClick={togglePivot}
@@ -310,6 +240,33 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
           {/* Separator */}
           <div className="w-px h-6 bg-white/10 mx-1"></div>
 
+          {/* Live readout for current mode */}
+          <div className="flex items-center gap-1 px-2">
+            {transformMode === 'translate' && (
+              <>
+                <Scrubber label="X" value={cylinder.position[0]} step={0.5} color="#ff6b6b" onChange={v => updatePosition(0, v)} />
+                <Scrubber label="Y" value={cylinder.position[1]} step={0.5} min={0} color="#51cf66" onChange={v => updatePosition(1, v)} />
+                <Scrubber label="Z" value={cylinder.position[2]} step={0.5} color="#339af0" onChange={v => updatePosition(2, v)} />
+              </>
+            )}
+            {transformMode === 'rotate' && (
+              <>
+                <Scrubber label="X°" value={cylinder.rotation[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
+                <Scrubber label="Y°" value={cylinder.rotation[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
+                <Scrubber label="Z°" value={cylinder.rotation[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
+              </>
+            )}
+            {transformMode === 'scale' && (
+              <>
+                <Scrubber label="D" value={cylinder.scale[0]} step={0.5} min={0.5} max={60} color="#2dd4bf" onChange={updateDiameter} />
+                <Scrubber label="H" value={cylinder.scale[1]} step={0.5} min={0.5} max={40} color="#51cf66" onChange={updateHeight} />
+              </>
+            )}
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-6 bg-white/10 mx-1"></div>
+
           {/* Expand / properties toggle */}
           <button
             onClick={() => setExpanded(v => !v)}
@@ -319,11 +276,11 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
             {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
 
-          {/* Edit (image/label) */}
+          {/* Edit (textures/label) */}
           <button
             onClick={onOpenEditor}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[10px] uppercase tracking-[0.15em] font-black text-white/50 hover:text-white hover:bg-white/10 transition-all"
-            title="Edit image & label"
+            title="Edit textures & label"
           >
             <Pencil size={12} />
           </button>
@@ -363,9 +320,9 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
               <div>
                 <div className="text-[8px] uppercase tracking-widest text-white/30 font-black mb-2">Position</div>
                 <div className="flex gap-2">
-                  <Scrubber label="X" value={wall.position[0]} step={0.5} color="#ff6b6b" onChange={v => updatePosition(0, v)} />
-                  <Scrubber label="Y" value={wall.position[1]} step={0.5} min={0} color="#51cf66" onChange={v => updatePosition(1, v)} />
-                  <Scrubber label="Z" value={wall.position[2]} step={0.5} color="#339af0" onChange={v => updatePosition(2, v)} />
+                  <Scrubber label="X" value={cylinder.position[0]} step={0.5} color="#ff6b6b" onChange={v => updatePosition(0, v)} />
+                  <Scrubber label="Y" value={cylinder.position[1]} step={0.5} min={0} color="#51cf66" onChange={v => updatePosition(1, v)} />
+                  <Scrubber label="Z" value={cylinder.position[2]} step={0.5} color="#339af0" onChange={v => updatePosition(2, v)} />
                 </div>
               </div>
 
@@ -373,23 +330,16 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
               <div>
                 <div className="text-[8px] uppercase tracking-widest text-white/30 font-black mb-2">Rotation</div>
                 <div className="flex gap-2 items-end">
-                  {(() => {
-                    const r = Array.isArray(wall.rotation) ? wall.rotation : [0, wall.rotation as number, 0];
-                    return (
-                      <>
-                        <Scrubber label="X°" value={r[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
-                        <Scrubber label="Y°" value={r[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
-                        <Scrubber label="Z°" value={r[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
-                      </>
-                    );
-                  })()}
+                  <Scrubber label="X°" value={cylinder.rotation[0]} step={1} min={0} max={359} color="#ff6b6b" onChange={v => updateRotation(0, v)} />
+                  <Scrubber label="Y°" value={cylinder.rotation[1]} step={1} min={0} max={359} color="#51cf66" onChange={v => updateRotation(1, v)} />
+                  <Scrubber label="Z°" value={cylinder.rotation[2]} step={1} min={0} max={359} color="#339af0" onChange={v => updateRotation(2, v)} />
                   <div className="flex gap-1 pb-0.5">
                     {[0, 90, 180, 270].map(deg => (
                       <button
                         key={deg}
                         onClick={() => updateRotation(1, deg)}
                         className={`w-7 h-5 text-[8px] font-mono rounded transition-all ${
-                          (Array.isArray(wall.rotation) ? wall.rotation[1] : wall.rotation) === deg ? 'bg-[#005e99]/60 text-white' : 'bg-white/5 text-white/30 hover:text-white/60'
+                          cylinder.rotation[1] === deg ? 'bg-[#005e99]/60 text-white' : 'bg-white/5 text-white/30 hover:text-white/60'
                         }`}
                       >
                         {deg}
@@ -399,12 +349,13 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
                 </div>
               </div>
 
-              {/* Scale */}
+              {/* Scale — show all 3 axes for advanced elliptical control */}
               <div>
                 <div className="text-[8px] uppercase tracking-widest text-white/30 font-black mb-2">Scale (ft)</div>
                 <div className="flex gap-2">
-                  <Scrubber label="W" value={wall.scale[0]} step={0.5} min={1} max={60} color="#ff6b6b" onChange={v => updateScale(0, v)} />
-                  <Scrubber label="H" value={wall.scale[1]} step={0.5} min={1} max={40} color="#51cf66" onChange={v => updateScale(1, v)} />
+                  <Scrubber label="W" value={cylinder.scale[0]} step={0.5} min={0.5} max={60} color="#ff6b6b" onChange={v => updateScale(0, v)} />
+                  <Scrubber label="H" value={cylinder.scale[1]} step={0.5} min={0.5} max={40} color="#51cf66" onChange={v => updateScale(1, v)} />
+                  <Scrubber label="D" value={cylinder.scale[2]} step={0.5} min={0.5} max={60} color="#339af0" onChange={v => updateScale(2, v)} />
                 </div>
               </div>
             </div>
@@ -415,40 +366,21 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
                 <div className="text-[8px] uppercase tracking-widest text-white/30 font-black">Draw Order</div>
                 <Scrubber
                   label="▲"
-                  value={wall.renderOrder || 0}
+                  value={cylinder.renderOrder || 0}
                   step={1}
                   min={0}
                   max={10}
                   color="#f59f00"
-                  onChange={v => onPropertyChange({ ...wall, renderOrder: v })}
+                  onChange={v => onPropertyChange({ ...cylinder, renderOrder: v })}
                 />
                 <span className="text-[8px] text-white/20">higher = on top</span>
               </div>
             </div>
 
-            {/* Options */}
-            {wall.type === 'wall' && (
-              <div className="mt-3 pt-3 border-t border-white/5">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                    wall.billboard
-                      ? 'bg-[#005e99] border-[#005e99]'
-                      : 'border-white/20 group-hover:border-white/40'
-                  }`}>
-                    {wall.billboard && (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    )}
-                  </div>
-                  <span className="text-[9px] uppercase tracking-widest text-white/50 font-black">Billboard / Look At Camera</span>
-                  <span className="text-[8px] text-white/20 ml-auto">always faces viewer</span>
-                </label>
-              </div>
-            )}
-
             {/* Compact info */}
             <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
               <span className="text-[8px] text-white/20 font-mono tracking-wider">
-                {wall.label || wall.id} · {wall.type}{wall.billboard ? ' · billboard' : ''}
+                {cylinder.label || cylinder.id} · cylinder · {cylinder.segments || 32} segments
               </span>
               <span className="text-[8px] text-white/15 font-mono">
                 SHIFT+drag for fine control
@@ -508,4 +440,4 @@ const GizmoToolbar: React.FC<GizmoToolbarProps> = ({
   );
 };
 
-export default GizmoToolbar;
+export default CylinderGizmoToolbar;
