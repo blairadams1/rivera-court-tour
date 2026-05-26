@@ -47,14 +47,13 @@ const MuralWall: React.FC<MuralWallProps> = ({ config }) => {
         Using meshBasicMaterial instead of meshStandardMaterial.
         This makes the material "unlit", so it renders the texture exactly 
         as the original PNG without being affected by scene lights.
-        depthTest disabled so main walls always render on top of placed/interior walls.
+        renderOrder={100} on the mesh ensures main walls draw on top of placed/interior walls.
       */}
       <meshBasicMaterial 
         map={texture} 
         transparent={config.imageUrl.toLowerCase().endsWith('.png')}
         alphaTest={0.1}
         side={THREE.DoubleSide}
-        depthTest={false}
         color={texture ? "white" : (error ? "#333333" : "#111111")}
       />
     </mesh>
