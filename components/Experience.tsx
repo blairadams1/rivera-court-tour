@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { MeshReflectorMaterial, Environment, useTexture } from '@react-three/drei';
+import { MeshReflectorMaterial, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import MuralWall from './MuralWall';
 import Hotspot from './Hotspot';
@@ -220,7 +220,7 @@ const Experience: React.FC<ExperienceProps> = ({
         <MeshReflectorMaterial
           map={floorTexture}
           blur={[400, 400]} 
-          resolution={1024}
+          resolution={512}
           mixBlur={1}
           mixStrength={0.8} 
           roughness={1}
@@ -254,7 +254,7 @@ const Experience: React.FC<ExperienceProps> = ({
         <OrthoViewController viewMode={viewMode as any} />
       )}
       <CameraTracker />
-      <Environment preset="studio" />
+
     </>
   );
 };
