@@ -22,6 +22,7 @@ import AdminBoxEditor from './components/AdminBoxEditor';
 import AdminCylinderEditor from './components/AdminCylinderEditor';
 import type { ViewMode } from './components/AdminViewToolbar';
 import { undoManager } from './undoManager';
+import { preloadTexture } from './textureCache';
 
 // ---- Edge-snap utilities ----
 /** Compute the 4 edge midpoints of a panel in world space */
@@ -176,16 +177,24 @@ const App: React.FC = () => {
       setPreloadingComplete(true);
       return;
     }
+    // Preload directly into Three.js texture cache so MuralWall gets instant hits
     preloadUrls.forEach((url) => {
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        loaded++;
-        setPreloadedCount(loaded);
-        if (loaded === preloadUrls.length) {
-          setPreloadingComplete(true);
-        }
-      };
-      img.src = url;
+      preloadTexture(url)
+        .then(() => {
+          loaded++;
+          setPreloadedCount(loaded);
+          if (loaded === preloadUrls.length) {
+            setPreloadingComplete(true);
+          }
+        })
+        .catch(() => {
+          // Count failures as loaded to avoid blocking the user
+          loaded++;
+          setPreloadedCount(loaded);
+          if (loaded === preloadUrls.length) {
+            setPreloadingComplete(true);
+          }
+        });
     });
   }, [preloadUrls]);
   

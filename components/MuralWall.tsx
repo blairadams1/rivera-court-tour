@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { WallConfig } from '../types';
+import { loadTextureCached } from '../textureCache';
 
 interface MuralWallProps {
   config: WallConfig;
@@ -14,30 +15,21 @@ const MuralWall: React.FC<MuralWallProps> = ({ config }) => {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-    
-    // Attempt loading high-res texture
-    loader.load(
-      config.imageUrl,
-      (tex) => {
-        tex.anisotropy = gl.capabilities.getMaxAnisotropy();
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.minFilter = THREE.LinearFilter;
+    // Uses the shared texture cache — if preloaded during the overlay,
+    // this resolves instantly with the already-decoded texture.
+    loadTextureCached(config.imageUrl, gl)
+      .then((tex) => {
         setTexture(tex);
         setError(false);
-      },
-      undefined,
-      (err) => {
+      })
+      .catch((err) => {
         console.error("Texture Load Failed:", config.imageUrl, err);
         setError(true);
         // Fallback to low-res
-        loader.load(config.lowResUrl, (lowTex) => {
-          lowTex.colorSpace = THREE.SRGBColorSpace;
-          setTexture(lowTex);
-        });
-      }
-    );
+        loadTextureCached(config.lowResUrl, gl)
+          .then((lowTex) => setTexture(lowTex))
+          .catch(() => {});
+      });
   }, [config.imageUrl, config.lowResUrl, gl]);
 
   return (
