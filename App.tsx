@@ -8,7 +8,7 @@ import VirtualJoystick from './components/VirtualJoystick';
 import HotspotInfoPanel from './components/HotspotInfoPanel';
 import AdminPanel from './components/AdminPanel';
 import Minimap from './components/Minimap';
-import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, MAX_LIFT, COLLISION_BUFFER } from './constants';
+import { EYE_LEVEL, ROOM_WIDTH, ROOM_DEPTH, ROOM_HEIGHT, MAX_LIFT, COLLISION_BUFFER, WALLS, FLOOR_IMAGE_URL, CEILING_IMAGE_URL } from './constants';
 import { Hotspot, WallSide, InteriorWall, InteriorBox, InteriorCylinder } from './types';
 import { db } from './firebase';
 import { VERSION, BUILD_NUMBER } from './version';
@@ -157,6 +157,37 @@ const App: React.FC = () => {
   const [scaffoldHeight, setScaffoldHeight] = useState(EYE_LEVEL);
   const [showOverlay, setShowOverlay] = useState(true);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+
+  // ---- Asset Preloading ----
+  const [preloadedCount, setPreloadedCount] = useState(0);
+  const [preloadingComplete, setPreloadingComplete] = useState(false);
+
+  const preloadUrls = useMemo(() => {
+    const urls = [FLOOR_IMAGE_URL, CEILING_IMAGE_URL];
+    WALLS.forEach((w) => {
+      if (w.imageUrl) urls.push(w.imageUrl);
+    });
+    return urls;
+  }, []);
+
+  useEffect(() => {
+    let loaded = 0;
+    if (preloadUrls.length === 0) {
+      setPreloadingComplete(true);
+      return;
+    }
+    preloadUrls.forEach((url) => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        setPreloadedCount(loaded);
+        if (loaded === preloadUrls.length) {
+          setPreloadingComplete(true);
+        }
+      };
+      img.src = url;
+    });
+  }, [preloadUrls]);
   
   const [activeHotspot, setActiveHotspot] = useState<Hotspot | null>(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -1007,14 +1038,29 @@ const App: React.FC = () => {
       )}
 
       {showOverlay && (
-        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center backdrop-blur-md" onClick={() => requestAnimationFrame(() => setShowOverlay(false))}>
-          <div className="max-w-2xl w-full text-center px-6 py-10 md:px-12 md:py-12 bg-transparent animate-in zoom-in-95 duration-500 flex flex-col items-center justify-center min-h-[100dvh]">
+        <div className="fixed inset-0 z-[500] bg-black/95 flex items-center justify-center backdrop-blur-md" onClick={() => { if (preloadingComplete) requestAnimationFrame(() => setShowOverlay(false)); }}>
+          <div className="max-w-2xl w-full text-center px-6 py-10 md:px-12 md:py-12 bg-transparent animate-in zoom-in-95 duration-500 flex flex-col items-center justify-center min-h-[100dvh]" onClick={(e) => e.stopPropagation()}>
             <img src={DIA_LOGO_URL} alt="DIA Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-5 md:mb-8 shadow-2xl border-2 border-white/20 rounded-full object-cover flex-shrink-0" />
             <div className="flex items-baseline justify-center gap-3 mb-4 md:mb-8">
               <h2 className="font-serif text-3xl md:text-6xl tracking-tight text-white leading-tight whitespace-nowrap">Detroit Industry Murals</h2>
               <span className="text-white text-xs font-mono tracking-widest bg-white/10 px-2 py-1 rounded-sm">{VERSION}.{BUILD_NUMBER}</span>
             </div>
             <p className="text-sm md:text-xl text-white/60 leading-relaxed mb-5 md:mb-9 font-light max-w-lg mx-auto">Explore Diego Rivera's masterpiece in stunning 3D.</p>
+
+            {/* Visual Loading Bar */}
+            {!preloadingComplete && (
+              <div className="flex flex-col items-center justify-center mb-10 w-full max-w-xs mx-auto animate-pulse">
+                <div className="text-[10px] text-white/40 uppercase tracking-[0.2em] mb-2 font-bold font-mono">
+                  PRE-RENDERING 3D ENVIRONMENT ({preloadedCount}/{preloadUrls.length})
+                </div>
+                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                  <div 
+                    className="h-full bg-sky-500 transition-all duration-300 ease-out shadow-[0_0_8px_#0284c7]" 
+                    style={{ width: `${(preloadedCount / preloadUrls.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
             {/* Desktop instructions */}
             <div className="hidden md:flex flex-wrap justify-center gap-14 mb-10 font-mono text-[19px]">
               <div className="text-center flex flex-col items-center">
@@ -1106,7 +1152,20 @@ const App: React.FC = () => {
                 <div className="text-white/80 text-[11px]">TAP CIRCLES</div>
               </div>
             </div>
-            <button className="w-full md:w-auto px-16 py-4 md:py-6 font-black text-white bg-[#005e99] hover:bg-white hover:text-[#005e99] transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0" onClick={() => requestAnimationFrame(() => setShowOverlay(false))}>ENTER THE COURT</button>
+            <button 
+              disabled={!preloadingComplete}
+              className={`w-full md:w-auto px-16 py-4 md:py-6 font-black text-white transition-all shadow-2xl rounded-sm uppercase tracking-[0.25em] text-xs flex-shrink-0 ${
+                preloadingComplete 
+                  ? 'bg-[#005e99] hover:bg-white hover:text-[#005e99] cursor-pointer' 
+                  : 'bg-zinc-800 text-white/40 cursor-wait'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                requestAnimationFrame(() => setShowOverlay(false));
+              }}
+            >
+              {preloadingComplete ? 'ENTER THE COURT' : `LOADING COURT ${Math.round((preloadedCount / preloadUrls.length) * 100)}%`}
+            </button>
           </div>
         </div>
       )}
