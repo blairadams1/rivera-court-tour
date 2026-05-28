@@ -5,6 +5,7 @@ import { TransformControls, Outlines } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteriorWall } from '../types';
 import { gizmoState } from './gizmoState';
+import { loadTextureCached } from '../textureCache';
 
 interface PlacedWallProps {
   wall: InteriorWall;
@@ -26,26 +27,15 @@ const PlacedWall: React.FC<PlacedWallProps> = ({
   const pivotRef = useRef<THREE.Group | null>(null);
   const transformRef = useRef<any>(null);
 
-  // ---- Texture Loading ----
+  // ---- Texture Loading (uses shared cache) ----
   useEffect(() => {
     if (!wall.imageUrl) return;
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-    loader.load(
-      wall.imageUrl,
-      (tex) => {
-        tex.anisotropy = gl.capabilities.getMaxAnisotropy();
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        tex.generateMipmaps = true;
-        tex.premultiplyAlpha = false;
+    loadTextureCached(wall.imageUrl, gl)
+      .then((tex) => {
         setTexture(tex);
         setHasAlpha(wall.imageUrl.toLowerCase().includes('png'));
-      },
-      undefined,
-      (err) => console.error('PlacedWall texture load failed:', wall.imageUrl, err)
-    );
+      })
+      .catch((err) => console.error('PlacedWall texture load failed:', wall.imageUrl, err));
   }, [wall.imageUrl, gl]);
 
   // ---- Pivot ref callback ----

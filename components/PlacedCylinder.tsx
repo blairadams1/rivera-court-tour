@@ -5,6 +5,7 @@ import { TransformControls, Outlines } from '@react-three/drei';
 import * as THREE from 'three';
 import { InteriorCylinder } from '../types';
 import { gizmoState } from './gizmoState';
+import { loadTextureCached } from '../textureCache';
 
 // ---------------------------------------------------------------------------
 // Checkerboard placeholder texture (module-level singleton, created once)
@@ -75,72 +76,34 @@ const PlacedCylinder: React.FC<PlacedCylinderProps> = ({
     setPivotMounted(!!node);
   }, []);
 
-  // ---- Material / Texture loading ----
+  // ---- Material / Texture loading (uses shared cache) ----
   useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-
-    /**
-     * Load a single texture and configure it for quality rendering.
-     */
-    const loadTex = (url: string): Promise<THREE.Texture> =>
-      new Promise((resolve, reject) => {
-        loader.load(
-          url,
-          (tex) => {
-            tex.anisotropy = gl.capabilities.getMaxAnisotropy();
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.minFilter = THREE.LinearMipmapLinearFilter;
-            tex.magFilter = THREE.LinearFilter;
-            tex.generateMipmaps = true;
-            resolve(tex);
-          },
-          undefined,
-          (err) => {
-            console.error('PlacedCylinder texture load failed:', url, err);
-            reject(err);
-          }
-        );
-      });
+    const loadTex = (url: string) => loadTextureCached(url, gl);
 
     /**
      * Build 3 materials (one per material group: side, top, bottom).
-     * For each slot we resolve in order:
-     *   1. Per-face texture (per-face mode)
-     *   2. Uniform texture
-     *   3. Solid colour
-     *   4. Checkerboard placeholder
+     * All textures are loaded in PARALLEL for fast loading.
      */
     const build = async () => {
-      const mats: THREE.MeshBasicMaterial[] = [];
+      // Determine URLs for each face
+      const urls: (string | undefined)[] = FACE_KEYS.map(faceKey => {
+        if (cylinder.textureMode === 'per-face' && cylinder.faceTextures) return cylinder.faceTextures[faceKey];
+        if (cylinder.textureMode === 'uniform') return cylinder.textureUrl;
+        return undefined;
+      });
 
-      for (let i = 0; i < 3; i++) {
-        const faceKey = FACE_KEYS[i];
+      // Load all textures in parallel
+      const texResults = await Promise.all(
+        urls.map(url => url ? loadTex(url).catch(() => null) : Promise.resolve(null))
+      );
 
-        // Determine which texture URL (if any) applies to this face
-        let url: string | undefined;
-        if (cylinder.textureMode === 'per-face' && cylinder.faceTextures) {
-          url = cylinder.faceTextures[faceKey];
-        } else if (cylinder.textureMode === 'uniform') {
-          url = cylinder.textureUrl;
+      // Build materials from results
+      const mats: THREE.MeshBasicMaterial[] = texResults.map((tex) => {
+        if (tex) {
+          return new THREE.MeshBasicMaterial({ map: tex, side: THREE.FrontSide, toneMapped: false });
         }
-
-        if (url) {
-          try {
-            const tex = await loadTex(url);
-            mats.push(new THREE.MeshBasicMaterial({
-              map: tex,
-              side: THREE.FrontSide,
-              toneMapped: false,
-            }));
-          } catch {
-            // Texture failed — fall through to colour / checkerboard
-            mats.push(createFallbackMaterial(cylinder.color));
-          }
-        } else {
-          mats.push(createFallbackMaterial(cylinder.color));
-        }
-      }
+        return createFallbackMaterial(cylinder.color);
+      });
 
       setMaterials(mats);
     };

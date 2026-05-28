@@ -1,20 +1,26 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { InteriorWall, InteriorBox, InteriorCylinder } from '../types';
 import { Save, Trash2, Clock, ChevronDown, ChevronUp, Upload, FolderOpen } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// Saved State type — a snapshot of all scene objects
+// Saved State types — metadata (lightweight) vs payload (full data)
 // ---------------------------------------------------------------------------
-interface SavedState {
+
+/** Lightweight metadata stored in `savedStateMeta` collection (~200 bytes each) */
+interface SavedStateMeta {
   id: string;
   name: string;
   createdAt: number;
   wallCount: number;
   boxCount: number;
   cylinderCount: number;
+}
+
+/** Full payload stored in `savedStateData` collection (can be large) */
+interface SavedStateData {
   walls: InteriorWall[];
   boxes: InteriorBox[];
   cylinders: InteriorCylinder[];
@@ -29,7 +35,7 @@ interface SavedStatesPanelProps {
 const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
   interiorWalls, interiorBoxes, interiorCylinders
 }) => {
-  const [states, setStates] = useState<SavedState[]>([]);
+  const [metas, setMetas] = useState<SavedStateMeta[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -37,12 +43,12 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Listen for saved states
+  // Listen for lightweight metadata ONLY (no object arrays)
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'savedStates'), (snap) => {
-      const loaded: SavedState[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as SavedState));
+    const unsub = onSnapshot(collection(db, 'savedStateMeta'), (snap) => {
+      const loaded: SavedStateMeta[] = snap.docs.map(d => ({ id: d.id, ...d.data() } as SavedStateMeta));
       loaded.sort((a, b) => b.createdAt - a.createdAt);
-      setStates(loaded);
+      setMetas(loaded);
     });
     return unsub;
   }, []);
@@ -54,25 +60,33 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Save current state
+  // Save current state — split into meta + data documents
   const handleSave = useCallback(async () => {
     const name = saveName.trim();
     if (!name) return;
     setSaving(true);
     try {
       const id = `ss-${Date.now()}`;
-      const state: SavedState = {
+
+      // Write lightweight metadata
+      const meta: SavedStateMeta = {
         id,
         name,
         createdAt: Date.now(),
         wallCount: interiorWalls.length,
         boxCount: interiorBoxes.length,
         cylinderCount: interiorCylinders.length,
+      };
+      await setDoc(doc(db, 'savedStateMeta', id), meta);
+
+      // Write full payload separately (only loaded on demand)
+      const data: SavedStateData = {
         walls: interiorWalls.map(w => ({ ...w })),
         boxes: interiorBoxes.map(b => ({ ...b })),
         cylinders: interiorCylinders.map(c => ({ ...c })),
       };
-      await setDoc(doc(db, 'savedStates', id), state);
+      await setDoc(doc(db, 'savedStateData', id), data);
+
       setSaveName('');
       setShowInput(false);
       setToast(`Saved "${name}"`);
@@ -83,38 +97,23 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
     setSaving(false);
   }, [saveName, interiorWalls, interiorBoxes, interiorCylinders]);
 
-  // Restore a saved state
-  const handleRestore = useCallback(async (state: SavedState) => {
-    if (!confirm(`Restore "${state.name}"?\n\nThis will replace all current walls, boxes, and cylinders with the saved snapshot.`)) return;
-    setLoadingId(state.id);
+  // Restore a saved state — load full payload on demand
+  const handleRestore = useCallback(async (meta: SavedStateMeta) => {
+    if (!confirm(`Restore "${meta.name}"?\n\nThis will replace all current walls, boxes, and cylinders with the saved snapshot.`)) return;
+    setLoadingId(meta.id);
     try {
-      // Delete all current objects
-      const wallSnap = await getDocs(collection(db, 'interiorWalls'));
-      const boxSnap = await getDocs(collection(db, 'interiorBoxes'));
-      const cylSnap = await getDocs(collection(db, 'interiorCylinders'));
-
-      const deleteBatch = writeBatch(db);
-      wallSnap.forEach(d => deleteBatch.delete(d.ref));
-      boxSnap.forEach(d => deleteBatch.delete(d.ref));
-      cylSnap.forEach(d => deleteBatch.delete(d.ref));
-      await deleteBatch.commit();
-
-      // Write saved objects back (batch limit is 500, split if needed)
-      const allOps: Array<{ ref: any; data: any }> = [
-        ...state.walls.map(w => ({ ref: doc(db, 'interiorWalls', w.id), data: w })),
-        ...state.boxes.map(b => ({ ref: doc(db, 'interiorBoxes', b.id), data: b })),
-        ...state.cylinders.map(c => ({ ref: doc(db, 'interiorCylinders', c.id), data: c })),
-      ];
-
-      // Split into batches of 500 (Firestore limit)
-      for (let i = 0; i < allOps.length; i += 500) {
-        const chunk = allOps.slice(i, i + 500);
-        const batch = writeBatch(db);
-        chunk.forEach(op => batch.set(op.ref, op.data));
-        await batch.commit();
+      // Fetch full payload on demand (NOT eagerly loaded)
+      const dataSnap = await getDoc(doc(db, 'savedStateData', meta.id));
+      if (!dataSnap.exists()) {
+        // Fallback: try legacy single-doc format
+        const legacySnap = await getDoc(doc(db, 'savedStates', meta.id));
+        if (!legacySnap.exists()) { setToast('State data not found'); setLoadingId(null); return; }
+        const legacy = legacySnap.data() as SavedStateData;
+        await restorePayload(legacy);
+      } else {
+        await restorePayload(dataSnap.data() as SavedStateData);
       }
-
-      setToast(`Restored "${state.name}"`);
+      setToast(`Restored "${meta.name}"`);
     } catch (err) {
       console.error('Restore state failed:', err);
       setToast('Restore failed');
@@ -122,11 +121,45 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
     setLoadingId(null);
   }, []);
 
-  // Delete a saved state
-  const handleDelete = useCallback(async (state: SavedState) => {
-    if (!confirm(`Delete saved state "${state.name}"?`)) return;
-    await deleteDoc(doc(db, 'savedStates', state.id));
-    setToast(`Deleted "${state.name}"`);
+  // Shared restore logic — delete all current, write saved
+  const restorePayload = async (data: SavedStateData) => {
+    // Delete all current objects
+    const wallSnap = await getDocs(collection(db, 'interiorWalls'));
+    const boxSnap = await getDocs(collection(db, 'interiorBoxes'));
+    const cylSnap = await getDocs(collection(db, 'interiorCylinders'));
+
+    const deleteBatch = writeBatch(db);
+    wallSnap.forEach(d => deleteBatch.delete(d.ref));
+    boxSnap.forEach(d => deleteBatch.delete(d.ref));
+    cylSnap.forEach(d => deleteBatch.delete(d.ref));
+    await deleteBatch.commit();
+
+    // Write saved objects back
+    const allOps: Array<{ ref: any; data: any }> = [
+      ...(data.walls || []).map(w => ({ ref: doc(db, 'interiorWalls', w.id), data: w })),
+      ...(data.boxes || []).map(b => ({ ref: doc(db, 'interiorBoxes', b.id), data: b })),
+      ...(data.cylinders || []).map(c => ({ ref: doc(db, 'interiorCylinders', c.id), data: c })),
+    ];
+
+    // Split into batches of 500 (Firestore limit)
+    for (let i = 0; i < allOps.length; i += 500) {
+      const chunk = allOps.slice(i, i + 500);
+      const batch = writeBatch(db);
+      chunk.forEach(op => batch.set(op.ref, op.data));
+      await batch.commit();
+    }
+  };
+
+  // Delete a saved state (both meta + data)
+  const handleDelete = useCallback(async (meta: SavedStateMeta) => {
+    if (!confirm(`Delete saved state "${meta.name}"?`)) return;
+    // Delete both documents and legacy format if it exists
+    await Promise.all([
+      deleteDoc(doc(db, 'savedStateMeta', meta.id)),
+      deleteDoc(doc(db, 'savedStateData', meta.id)),
+      deleteDoc(doc(db, 'savedStates', meta.id)).catch(() => {}), // legacy cleanup
+    ]);
+    setToast(`Deleted "${meta.name}"`);
   }, []);
 
   const totalObjects = interiorWalls.length + interiorBoxes.length + interiorCylinders.length;
@@ -142,8 +175,8 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
         <h3 className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-black group-hover:text-white/80 transition-colors">
           SCENE STATES
         </h3>
-        {states.length > 0 && (
-          <span className="text-[8px] text-violet-400/50 font-mono">{states.length}</span>
+        {metas.length > 0 && (
+          <span className="text-[8px] text-violet-400/50 font-mono">{metas.length}</span>
         )}
         <span className="ml-auto">
           {expanded
@@ -197,7 +230,7 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
 
           {/* Saved states list */}
           <div className="space-y-1 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-            {states.map(s => (
+            {metas.map(s => (
               <div
                 key={s.id}
                 className="bg-white/5 border border-white/5 rounded p-2.5 group hover:bg-white/10 hover:border-violet-500/20 transition-all"
@@ -237,7 +270,7 @@ const SavedStatesPanel: React.FC<SavedStatesPanelProps> = ({
                 </div>
               </div>
             ))}
-            {states.length === 0 && (
+            {metas.length === 0 && (
               <div className="text-[9px] text-white/15 text-center py-4 italic">
                 No saved states yet
               </div>
