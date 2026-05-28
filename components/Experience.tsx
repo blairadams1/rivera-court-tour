@@ -97,8 +97,8 @@ const Experience: React.FC<ExperienceProps> = ({
       <color attach="background" args={['#050505']} />
       
       {/* Balanced, even lighting for floor and ceiling without creating bright spots */}
-      <ambientLight intensity={1.2} />
-      <directionalLight position={[0, 40, 0]} intensity={0.5} />
+      <ambientLight intensity={1.8} />
+      <directionalLight position={[0, 40, 0]} intensity={0.6} />
 
       {WALLS.map((wall, i) => (
         <group 
@@ -227,7 +227,7 @@ const Experience: React.FC<ExperienceProps> = ({
           depthScale={1}
           minDepthThreshold={0.9}
           maxDepthThreshold={1.2}
-          color="#999999" 
+          color="#e0e0e0" 
           metalness={0} 
           transparent={false}
           mirror={0.12} 
@@ -237,7 +237,7 @@ const Experience: React.FC<ExperienceProps> = ({
       {/* Ceiling with provided image */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, ROOM_HEIGHT, 0]}>
         <planeGeometry args={[ROOM_WIDTH, ROOM_DEPTH]} />
-        <meshStandardMaterial map={ceilingTexture} roughness={1} metalness={0} />
+        <meshBasicMaterial map={ceilingTexture} />
       </mesh>
 
 
