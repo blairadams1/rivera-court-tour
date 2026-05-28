@@ -29,8 +29,8 @@ export const CEILING_IMAGE_URL = 'https://firebasestorage.googleapis.com/v0/b/ri
 export const WALLS: WallConfig[] = [
   {
     side: WallSide.NORTH,
-    imageUrl: '/NorthWall4.ktx2',
-    lowResUrl: '/NorthWall4.ktx2',
+    imageUrl: '/NorthWall4.webp',
+    lowResUrl: '/NorthWall4.webp',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, -ROOM_DEPTH / 2],
@@ -38,8 +38,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.SOUTH,
-    imageUrl: '/SouthWall4c.ktx2',
-    lowResUrl: '/SouthWall4c.ktx2',
+    imageUrl: '/SouthWall4c.webp',
+    lowResUrl: '/SouthWall4c.webp',
     width: ROOM_WIDTH,
     height: ROOM_HEIGHT,
     position: [0, ROOM_HEIGHT / 2, ROOM_DEPTH / 2],
@@ -47,8 +47,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.EAST,
-    imageUrl: '/EastWallTransparent4.ktx2',
-    lowResUrl: '/EastWallTransparent4.ktx2',
+    imageUrl: '/EastWallTransparent4.webp',
+    lowResUrl: '/EastWallTransparent4.webp',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],
@@ -56,8 +56,8 @@ export const WALLS: WallConfig[] = [
   },
   {
     side: WallSide.WEST,
-    imageUrl: '/WestWall5.ktx2',
-    lowResUrl: '/WestWall5.ktx2',
+    imageUrl: '/WestWall5.webp',
+    lowResUrl: '/WestWall5.webp',
     width: ROOM_DEPTH,
     height: ROOM_HEIGHT,
     position: [-ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 0],

@@ -177,37 +177,15 @@ const App: React.FC = () => {
       return;
     }
     preloadUrls.forEach((url) => {
-      if (url.toLowerCase().endsWith('.ktx2')) {
-        // Preload KTX2 files via fetch so they are cached by the browser's HTTP cache
-        fetch(url)
-          .then(() => {
-            loaded++;
-            setPreloadedCount(loaded);
-            if (loaded === preloadUrls.length) {
-              setPreloadingComplete(true);
-            }
-          })
-          .catch((err) => {
-            console.error("Preload KTX2 Failed:", url, err);
-            // Treat as loaded to avoid blocking the user indefinitely on network hiccups
-            loaded++;
-            setPreloadedCount(loaded);
-            if (loaded === preloadUrls.length) {
-              setPreloadingComplete(true);
-            }
-          });
-      } else {
-        // Preload regular images
-        const img = new Image();
-        img.onload = img.onerror = () => {
-          loaded++;
-          setPreloadedCount(loaded);
-          if (loaded === preloadUrls.length) {
-            setPreloadingComplete(true);
-          }
-        };
-        img.src = url;
-      }
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loaded++;
+        setPreloadedCount(loaded);
+        if (loaded === preloadUrls.length) {
+          setPreloadingComplete(true);
+        }
+      };
+      img.src = url;
     });
   }, [preloadUrls]);
   
